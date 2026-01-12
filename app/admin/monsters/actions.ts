@@ -49,6 +49,7 @@ async function addMonsterAction(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim()
   const mainEffect = String(formData.get("mainEffect") ?? "").trim()
+  const note = String(formData.get("note") ?? "").trim()
   const elementRaw = String(formData.get("element") ?? "").trim()
   const typeRaw = String(formData.get("type") ?? "").trim()
   const hasFourStar = String(formData.get("hasFourStar") ?? "") === "on"
@@ -96,6 +97,7 @@ async function addMonsterAction(formData: FormData) {
     element: elementRaw,
     type: typeRaw,
     mainEffect,
+    note: note ? note : undefined,
     hasFourStar,
     fourStarEffect: hasFourStar ? fourStarEffect : undefined,
     imageUrl,
@@ -118,6 +120,7 @@ async function updateMonsterAction(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim()
   const mainEffect = String(formData.get("mainEffect") ?? "").trim()
+  const note = String(formData.get("note") ?? "").trim()
   const elementRaw = String(formData.get("element") ?? "").trim()
   const typeRaw = String(formData.get("type") ?? "").trim()
   const hasFourStar = String(formData.get("hasFourStar") ?? "") === "on"
@@ -155,6 +158,7 @@ async function updateMonsterAction(formData: FormData) {
     element: elementRaw,
     type: typeRaw,
     mainEffect,
+    note: note ? note : undefined,
     hasFourStar,
     fourStarEffect: hasFourStar ? fourStarEffect : undefined,
     imageUrl,

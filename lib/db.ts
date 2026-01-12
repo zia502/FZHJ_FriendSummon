@@ -19,6 +19,7 @@ function ensureSchema(database: Database.Database) {
       hasFourStar INTEGER NOT NULL CHECK (hasFourStar IN (0,1)),
       fourStarEffect TEXT,
       imageUrl TEXT,
+      note TEXT,
       createdAt TEXT NOT NULL,
       updatedAt TEXT
     );
@@ -75,6 +76,10 @@ function ensureSchema(database: Database.Database) {
     )
   }
 
+  if (!columns.some((c) => c.name === "note")) {
+    database.exec("ALTER TABLE monsters ADD COLUMN note TEXT")
+  }
+
   // Normalize legacy placeholder values for element.
   database.exec(
     "UPDATE monsters SET element = '未设置' WHERE element IS NULL OR element = '' OR element = '其他'"
@@ -103,6 +108,7 @@ function ensureSchema(database: Database.Database) {
           hasFourStar INTEGER NOT NULL CHECK (hasFourStar IN (0,1)),
           fourStarEffect TEXT,
           imageUrl TEXT,
+          note TEXT,
           createdAt TEXT NOT NULL,
           updatedAt TEXT
         );
@@ -118,6 +124,7 @@ function ensureSchema(database: Database.Database) {
           hasFourStar,
           fourStarEffect,
           imageUrl,
+          note,
           createdAt,
           updatedAt
         )
@@ -130,6 +137,7 @@ function ensureSchema(database: Database.Database) {
           hasFourStar,
           fourStarEffect,
           imageUrl,
+          note,
           createdAt,
           updatedAt
         FROM monsters;

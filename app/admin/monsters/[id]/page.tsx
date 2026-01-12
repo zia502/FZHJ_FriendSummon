@@ -52,6 +52,16 @@ export default async function MonsterEditPage({
             </div>
 
             <div className="grid gap-2">
+              <div className="text-sm font-medium">备注（可选）</div>
+              <Input
+                name="note"
+                defaultValue={monster.note ?? ""}
+                placeholder="例如：修斯 / 海神 / 队伍简称"
+                maxLength={64}
+              />
+            </div>
+
+            <div className="grid gap-2">
               <div className="text-sm font-medium">5星主位被动（必填）</div>
               <Textarea name="mainEffect" defaultValue={monster.mainEffect} required />
             </div>

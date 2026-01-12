@@ -69,9 +69,11 @@ type MonsterSlot = {
   element: "火" | "风" | "土" | "水" | "光" | "暗" | "未设置"
   type: "神" | "魔" | "属性" | "其他"
   mainEffect: string
+  note?: string
   hasFourStar: boolean
   fourStarEffect?: string
   imageUrl?: string
+  star?: 4 | 5
 }
 
 function SummonCard({ item, className }: { item: SummonListItem; className?: string }) {
@@ -124,6 +126,7 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
         {item.slots.map((slot, index) => {
           const hasImage = !!slot?.imageUrl
           const initial = slot?.name?.trim()?.slice(0, 1) ?? ""
+          const star = slot?.star ?? 5
           return (
             <div key={index} className="group relative">
               <div
@@ -133,15 +136,25 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
                 )}
               >
                 {hasImage ? (
-                  <Image
-                    src={slot!.imageUrl!}
-                    alt={slot?.name ?? "魔物"}
-                    width={64}
-                    height={64}
-                    className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
-                    priority={false}
-                    unoptimized={slot!.imageUrl!.startsWith("/uploads/")}
-                  />
+                  <div className="relative size-full">
+                    <Image
+                      src={slot!.imageUrl!}
+                      alt={slot?.name ?? "魔物"}
+                      width={64}
+                      height={64}
+                      className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
+                      priority={false}
+                      unoptimized={slot!.imageUrl!.startsWith("/uploads/")}
+                    />
+                    <span
+                      className={cn(
+                        "bg-black/60 text-white shadow-sm",
+                        "absolute left-1 top-1 rounded px-1 py-0.5 text-[10px] leading-none"
+                      )}
+                    >
+                      ⭐{star}
+                    </span>
+                  </div>
                 ) : slot ? (
                   <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">
                     {initial}

@@ -131,7 +131,10 @@ function FriendSummonPage({
                           onChange={() => toggleFilter(el, m.id)}
                           className="accent-primary"
                         />
-                        <span className="truncate">{m.name}</span>
+                        <span className="truncate">
+                          {m.name}
+                          {m.note ? `（${m.note}）` : ""}
+                        </span>
                       </label>
                     ))}
                   </div>

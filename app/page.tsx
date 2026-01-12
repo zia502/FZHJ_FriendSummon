@@ -26,6 +26,7 @@ export default async function Page({
     element: m.element,
     type: m.type,
     mainEffect: m.mainEffect,
+    note: m.note,
     hasFourStar: m.hasFourStar,
     fourStarEffect: m.fourStarEffect,
     imageUrl: withVersion(m.imageUrl, m.updatedAt),
@@ -55,12 +56,14 @@ export default async function Page({
                 mainEffect: effect || monster.mainEffect,
                 hasFourStar: false,
                 fourStarEffect: undefined,
+                star: 4,
               }
             }
             return {
               ...monster,
               hasFourStar: false,
               fourStarEffect: undefined,
+              star: 5,
             }
           }) as SummonListItem["slots"],
         }))

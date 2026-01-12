@@ -193,6 +193,7 @@ function SharePage({
         <div className="mt-3 grid grid-cols-5 gap-2">
           {slotIds.map((id, index) => {
             const monsterId = id ? id.split("|")[0] : ""
+            const star = id && id.split("|")[1] === "u" ? 4 : 5
             const monster = monsterId ? monstersById.get(monsterId) : undefined
             const initial = monster?.name?.trim()?.slice(0, 1) ?? ""
             const hasImage = !!monster?.imageUrl
@@ -205,15 +206,25 @@ function SharePage({
                   )}
                 >
                   {hasImage ? (
-                    <Image
-                      src={monster!.imageUrl!}
-                      alt={monster?.name ?? "魔物"}
-                      width={64}
-                      height={64}
-                      className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
-                      priority={false}
-                      unoptimized={monster!.imageUrl!.startsWith("/uploads/")}
-                    />
+                    <div className="relative size-full">
+                      <Image
+                        src={monster!.imageUrl!}
+                        alt={monster?.name ?? "魔物"}
+                        width={64}
+                        height={64}
+                        className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
+                        priority={false}
+                        unoptimized={monster!.imageUrl!.startsWith("/uploads/")}
+                      />
+                      <span
+                        className={cn(
+                          "bg-black/60 text-white shadow-sm",
+                          "absolute left-1 top-1 rounded px-1 py-0.5 text-[10px] leading-none"
+                        )}
+                      >
+                        ⭐{star}
+                      </span>
+                    </div>
                   ) : monster ? (
                     <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">
                       {initial}

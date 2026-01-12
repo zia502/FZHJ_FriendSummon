@@ -12,6 +12,7 @@ type MonsterRecord = {
   element: MonsterElementValue
   type: MonsterType
   mainEffect: string
+  note?: string
   hasFourStar: boolean
   fourStarEffect?: string
   imageUrl?: string
@@ -73,9 +74,11 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
   }
 
   if (q) {
-    where.push("(name LIKE ? OR mainEffect LIKE ? OR COALESCE(fourStarEffect,'') LIKE ?)")
+    where.push(
+      "(name LIKE ? OR mainEffect LIKE ? OR COALESCE(fourStarEffect,'') LIKE ? OR COALESCE(note,'') LIKE ?)"
+    )
     const like = `%${q}%`
-    values.push(like, like, like)
+    values.push(like, like, like, like)
   }
 
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : ""
@@ -86,6 +89,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
       element,
       type,
       mainEffect,
+      note,
       hasFourStar,
       fourStarEffect,
       imageUrl,
@@ -103,6 +107,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
     element: string
     type: MonsterType
     mainEffect: string
+    note: string | null
     hasFourStar: 0 | 1
     fourStarEffect: string | null
     imageUrl: string | null
@@ -116,6 +121,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
     element: normalizeMonsterElement(row.element),
     type: row.type,
     mainEffect: row.mainEffect,
+    note: row.note ?? undefined,
     hasFourStar: row.hasFourStar === 1,
     fourStarEffect: row.fourStarEffect ?? undefined,
     imageUrl: row.imageUrl ?? undefined,
@@ -142,12 +148,13 @@ async function addMonster(record: MonsterRecord) {
       element,
       type,
       mainEffect,
+      note,
       hasFourStar,
       fourStarEffect,
       imageUrl,
       createdAt,
       updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
 
   stmt.run(
@@ -156,6 +163,7 @@ async function addMonster(record: MonsterRecord) {
     record.element,
     record.type,
     record.mainEffect,
+    record.note ?? null,
     record.hasFourStar ? 1 : 0,
     record.fourStarEffect ?? null,
     record.imageUrl ?? null,
@@ -175,6 +183,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
         element,
         type,
         mainEffect,
+        note,
         hasFourStar,
         fourStarEffect,
         imageUrl,
@@ -191,6 +200,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
         element: string
         type: MonsterType
         mainEffect: string
+        note: string | null
         hasFourStar: 0 | 1
         fourStarEffect: string | null
         imageUrl: string | null
@@ -206,6 +216,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
     element: normalizeMonsterElement(row.element),
     type: row.type,
     mainEffect: row.mainEffect,
+    note: row.note ?? undefined,
     hasFourStar: row.hasFourStar === 1,
     fourStarEffect: row.fourStarEffect ?? undefined,
     imageUrl: row.imageUrl ?? undefined,
@@ -233,6 +244,7 @@ async function updateMonster(record: Omit<MonsterRecord, "createdAt">) {
       element = ?,
       type = ?,
       mainEffect = ?,
+      note = ?,
       hasFourStar = ?,
       fourStarEffect = ?,
       imageUrl = ?,
@@ -244,6 +256,7 @@ async function updateMonster(record: Omit<MonsterRecord, "createdAt">) {
     record.element,
     record.type,
     record.mainEffect,
+    record.note ?? null,
     record.hasFourStar ? 1 : 0,
     record.fourStarEffect ?? null,
     record.imageUrl ?? null,

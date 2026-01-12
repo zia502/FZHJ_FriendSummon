@@ -153,6 +153,18 @@ export default async function AdminPage({
             </div>
 
             <div className="grid gap-2">
+              <div className="text-sm font-medium">备注（可选）</div>
+              <Input
+                name="note"
+                placeholder="例如：修斯 / 海神 / 队伍简称"
+                maxLength={64}
+              />
+              <div className="text-muted-foreground text-xs">
+                备注会在招募列表的过滤器里以“（备注）”显示，方便辨认。
+              </div>
+            </div>
+
+            <div className="grid gap-2">
               <div className="text-sm font-medium">5星主位被动（必填）</div>
               <Textarea
                 name="mainEffect"
@@ -306,6 +318,11 @@ export default async function AdminPage({
                       <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
                         {monster.mainEffect}
                       </div>
+                      {monster.note && (
+                        <div className="text-muted-foreground mt-1 line-clamp-1 text-xs">
+                          备注：{monster.note}
+                        </div>
+                      )}
                       {monster.hasFourStar && monster.fourStarEffect && (
                         <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
                           未满突：{monster.fourStarEffect}
