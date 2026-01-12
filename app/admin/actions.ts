@@ -6,7 +6,10 @@ import { redirect } from "next/navigation"
 async function adminLogin(formData: FormData) {
   const password = String(formData.get("password") ?? "")
 
-  const expectedPassword = process.env.ADMIN_PASSWORD ?? "admin"
+  const expectedPassword = process.env.ADMIN_PASSWORD
+  if (!expectedPassword) {
+    redirect("/admin?error=missing_env")
+  }
   if (password !== expectedPassword) {
     redirect("/admin?error=1")
   }
@@ -30,4 +33,3 @@ async function adminLogout() {
 }
 
 export { adminLogin, adminLogout }
-

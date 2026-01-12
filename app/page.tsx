@@ -1,71 +1,77 @@
-import { SummonCard, type SummonListItem } from "@/components/summon-card"
+import { FriendSummonPage } from "@/components/friend-summon-page"
+import type { MonsterSlot, SummonListItem } from "@/components/summon-card"
+import { getMonsters } from "@/lib/monsters-store"
+import { getFriendSummonsPage } from "@/lib/friend-summons-store"
 
-export default function Page() {
-  const items: SummonListItem[] = [
-    {
-      playerId: "U-10482917",
-      summonImages: [
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-      ],
-    },
-    {
-      playerId: "U-20519304",
-      summonImages: [
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-      ],
-    },
-    {
-      playerId: "U-30958266",
-      summonImages: [
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-        "/summon-placeholder.svg",
-      ],
-    },
-  ]
+function pickFirst(
+  monsters: MonsterSlot[],
+  element: MonsterSlot["element"]
+): MonsterSlot | null {
+  if (element === "其他") return monsters[0] ?? null
+  return monsters.find((m) => m.element === element) ?? null
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const page = Math.max(1, Number(params?.page ?? 1) || 1)
+
+  const monsters = await getMonsters({ limit: 5000 })
+  const monsterOptions: MonsterSlot[] = monsters.map((m) => ({
+    id: m.id,
+    name: m.name,
+    element: m.element,
+    type: m.type,
+    mainEffect: m.mainEffect,
+    hasFourStar: m.hasFourStar,
+    fourStarEffect: m.fourStarEffect,
+    imageUrl: m.imageUrl,
+  }))
+  const monstersById = new Map(monsterOptions.map((m) => [m.id, m]))
+
+  const { items, hasPrev, hasNext } = await getFriendSummonsPage({
+    page,
+    pageSize: 20,
+  })
+
+  const initialItems: SummonListItem[] =
+    items.length > 0
+      ? items.map((r) => ({
+          playerId: r.playerId,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          slots: r.slotIds.map((id) => (id ? monstersById.get(id) ?? null : null)) as SummonListItem["slots"],
+        }))
+      : [
+          {
+            playerId: "10482917",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            slots: [
+              pickFirst(monsterOptions, "火"),
+              pickFirst(monsterOptions, "风"),
+              pickFirst(monsterOptions, "土"),
+              pickFirst(monsterOptions, "水"),
+              pickFirst(monsterOptions, "其他"),
+              pickFirst(monsterOptions, "火"),
+              pickFirst(monsterOptions, "风"),
+              pickFirst(monsterOptions, "土"),
+              pickFirst(monsterOptions, "水"),
+              pickFirst(monsterOptions, "其他"),
+            ] as SummonListItem["slots"],
+          },
+        ]
 
   return (
-    <main className="bg-background min-h-screen">
-      <div className="mx-auto w-full max-w-md px-4 py-6 sm:px-6 sm:py-10">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-foreground text-2xl font-bold tracking-tight">
-              友招招募列表
-            </h1>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-2">
-          {items.map((item) => (
-            <SummonCard key={item.playerId} item={item} />
-          ))}
-        </div>
-      </div>
-    </main>
+    <FriendSummonPage
+      initialItems={initialItems}
+      monsters={monsterOptions}
+      page={page}
+      hasPrev={hasPrev}
+      hasNext={hasNext}
+    />
   )
 }
