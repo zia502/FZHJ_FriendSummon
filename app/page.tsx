@@ -2,6 +2,7 @@ import { FriendSummonPage } from "@/components/friend-summon-page"
 import type { MonsterSlot, SummonListItem } from "@/components/summon-card"
 import { getMonsters } from "@/lib/monsters-store"
 import { getFriendSummonsPage } from "@/lib/friend-summons-store"
+import { parseSlotValue } from "@/lib/slot-value"
 
 function withVersion(url: string | undefined, version: string | undefined) {
   if (!url) return undefined
@@ -50,7 +51,26 @@ export default async function Page({
           playerId: r.playerId,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,
-          slots: r.slotIds.map((id) => (id ? monstersById.get(id) ?? null : null)) as SummonListItem["slots"],
+          slots: r.slotIds.map((raw) => {
+            if (!raw) return null
+            const { monsterId, variant } = parseSlotValue(raw)
+            const monster = monstersById.get(monsterId)
+            if (!monster) return null
+            if (variant === "u") {
+              const effect = monster.fourStarEffect ?? ""
+              return {
+                ...monster,
+                mainEffect: effect || monster.mainEffect,
+                hasFourStar: false,
+                fourStarEffect: undefined,
+              }
+            }
+            return {
+              ...monster,
+              hasFourStar: false,
+              fourStarEffect: undefined,
+            }
+          }) as SummonListItem["slots"],
         }))
       : [
           {

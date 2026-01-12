@@ -128,7 +128,7 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
             <div key={index} className="group relative">
               <div
                 className={cn(
-                  "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset",
+                  "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset p-[2px]",
                   ringClassForIndex(index)
                 )}
               >
@@ -138,7 +138,7 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
                     alt={slot?.name ?? "魔物"}
                     width={64}
                     height={64}
-                    className="block size-16 rounded-md object-contain"
+                    className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
                     priority={false}
                   />
                 ) : slot ? (
@@ -175,11 +175,6 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
                     <div className="text-muted-foreground mt-2">
                       {slot.mainEffect}
                     </div>
-                    {slot.hasFourStar && slot.fourStarEffect && (
-                      <div className="text-muted-foreground mt-1">
-                        4星：{slot.fourStarEffect}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 
 import { getMonsters } from "@/lib/monsters-store"
 import { upsertFriendSummon } from "@/lib/friend-summons-store"
+import { parseSlotValue } from "@/lib/slot-value"
 
 function slotElement(index: number) {
   const col = index % 5
@@ -32,8 +33,13 @@ async function upsertFriendSummonAction(formData: FormData) {
       continue
     }
 
-    const monster = byId.get(raw)
+    const { monsterId, variant } = parseSlotValue(raw)
+    const monster = byId.get(monsterId)
     if (!monster) {
+      redirect(`/share?id=${playerId}&error=bad_monster`)
+    }
+
+    if (variant === "u" && (!monster.hasFourStar || !monster.fourStarEffect)) {
       redirect(`/share?id=${playerId}&error=bad_monster`)
     }
 
@@ -51,4 +57,3 @@ async function upsertFriendSummonAction(formData: FormData) {
 }
 
 export { upsertFriendSummonAction }
-

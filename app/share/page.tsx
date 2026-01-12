@@ -30,6 +30,7 @@ export default async function SharePageRoute({
         name: m.name,
         element: m.element,
         type: m.type,
+        hasFourStar: m.hasFourStar,
         imageUrl: withVersion(m.imageUrl, m.updatedAt),
       }))}
       initialPlayerId={id}

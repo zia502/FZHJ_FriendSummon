@@ -73,7 +73,7 @@ function ShareDialog({
     if (!idValid) return
 
     const resolvedSlots = slots.map((id) =>
-      id ? monstersById.get(id) ?? null : null
+      id ? monstersById.get(id.split("|")[0] ?? id) ?? null : null
     ) as SummonListItem["slots"]
 
     const now = new Date().toISOString()
@@ -145,11 +145,21 @@ function ShareDialog({
                         )}
                       >
                         <option value="">{el} · 选择</option>
-                        {options.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name}
-                          </option>
-                        ))}
+                        {options.flatMap((m) => {
+                          const items = [
+                            <option key={`${m.id}|5`} value={`${m.id}|5`}>
+                              {m.name}（5星）
+                            </option>,
+                          ]
+                          if (m.hasFourStar) {
+                            items.push(
+                              <option key={`${m.id}|u`} value={`${m.id}|u`}>
+                                {m.name}（未满突）
+                              </option>
+                            )
+                          }
+                          return items
+                        })}
                       </select>
                     </div>
                   )

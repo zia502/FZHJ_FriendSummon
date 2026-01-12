@@ -146,10 +146,10 @@ export default async function AdminPage({
             </div>
 
             <div className="grid gap-2">
-              <div className="text-sm font-medium">主位被动（必填）</div>
+              <div className="text-sm font-medium">5星主位被动（必填）</div>
               <Textarea
                 name="mainEffect"
-                placeholder="请输入主位被动描述"
+                placeholder="请输入5星主位被动描述"
                 required
               />
             </div>

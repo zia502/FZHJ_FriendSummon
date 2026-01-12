@@ -52,7 +52,7 @@ export default async function MonsterEditPage({
             </div>
 
             <div className="grid gap-2">
-              <div className="text-sm font-medium">主位被动（必填）</div>
+              <div className="text-sm font-medium">5星主位被动（必填）</div>
               <Textarea name="mainEffect" defaultValue={monster.mainEffect} required />
             </div>
 
@@ -123,4 +123,3 @@ export default async function MonsterEditPage({
     </main>
   )
 }
-

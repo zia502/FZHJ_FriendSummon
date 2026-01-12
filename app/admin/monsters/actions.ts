@@ -71,7 +71,7 @@ async function addMonsterAction(formData: FormData) {
     throw new Error("缺少必填项：魔物名")
   }
   if (!mainEffect) {
-    throw new Error("缺少必填项：主位被动")
+    throw new Error("缺少必填项：5星主位被动")
   }
   if (!isMonsterElement(elementRaw)) {
     throw new Error("缺少必填项：属性")
@@ -136,7 +136,7 @@ async function updateMonsterAction(formData: FormData) {
   const fourStarEffect = String(formData.get("fourStarEffect") ?? "").trim()
 
   if (!name) throw new Error("缺少必填项：魔物名")
-  if (!mainEffect) throw new Error("缺少必填项：主位被动")
+  if (!mainEffect) throw new Error("缺少必填项：5星主位被动")
   if (!isMonsterElement(elementRaw)) throw new Error("缺少必填项：属性")
   if (!isMonsterType(typeRaw)) throw new Error("缺少必填项：类型")
   if (hasFourStar && !fourStarEffect) {

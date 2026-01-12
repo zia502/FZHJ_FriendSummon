@@ -15,6 +15,7 @@ type MonsterOption = {
   name: string
   element: "火" | "风" | "土" | "水" | "其他"
   type: "神" | "魔" | "属性"
+  hasFourStar: boolean
   imageUrl?: string
 }
 
@@ -68,7 +69,11 @@ function SharePage({
 
   const initialSlots = React.useMemo(() => {
     if (!initialSlotIds) return Array.from({ length: 10 }, () => "")
-    return Array.from({ length: 10 }, (_, i) => initialSlotIds[i] ?? "")
+    return Array.from({ length: 10 }, (_, i) => {
+      const raw = initialSlotIds[i] ?? ""
+      if (!raw) return ""
+      return raw.includes("|") ? raw : `${raw}|5`
+    })
   }, [initialSlotIds])
 
   const [slotIds, setSlotIds] = React.useState<Array<string>>(() => initialSlots)
@@ -150,11 +155,21 @@ function SharePage({
                         )}
                       >
                         <option value="">{el} · 空</option>
-                        {options.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name}
-                          </option>
-                        ))}
+                        {options.flatMap((m) => {
+                          const items = [
+                            <option key={`${m.id}|5`} value={`${m.id}|5`}>
+                              {m.name}（5星）
+                            </option>,
+                          ]
+                          if (m.hasFourStar) {
+                            items.push(
+                              <option key={`${m.id}|u`} value={`${m.id}|u`}>
+                                {m.name}（未满突）
+                              </option>
+                            )
+                          }
+                          return items
+                        })}
                       </select>
                     </div>
                   )
@@ -175,14 +190,15 @@ function SharePage({
 
         <div className="mt-3 grid grid-cols-5 gap-2">
           {slotIds.map((id, index) => {
-            const monster = id ? monstersById.get(id) : undefined
+            const monsterId = id ? id.split("|")[0] : ""
+            const monster = monsterId ? monstersById.get(monsterId) : undefined
             const initial = monster?.name?.trim()?.slice(0, 1) ?? ""
             const hasImage = !!monster?.imageUrl
             return (
               <div key={index} className="flex items-center justify-center">
                 <div
                   className={cn(
-                    "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset",
+                    "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset p-[2px]",
                     slotRingClass(index)
                   )}
                 >
@@ -192,7 +208,7 @@ function SharePage({
                       alt={monster?.name ?? "魔物"}
                       width={64}
                       height={64}
-                      className="block size-16 rounded-md object-contain"
+                      className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
                       priority={false}
                     />
                   ) : monster ? (
