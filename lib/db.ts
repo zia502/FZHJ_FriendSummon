@@ -4,16 +4,12 @@ import Database from "better-sqlite3"
 import path from "node:path"
 
 let db: Database.Database | null = null
+let schemaEnsured = false
 
-function getDb() {
-  if (db) return db
+function ensureSchema(database: Database.Database) {
+  if (schemaEnsured) return
 
-  const filename = path.join(process.cwd(), "data", "app.db")
-  db = new Database(filename)
-  db.pragma("journal_mode = WAL")
-  db.pragma("foreign_keys = ON")
-
-  db.exec(`
+  database.exec(`
     CREATE TABLE IF NOT EXISTS monsters (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -23,7 +19,8 @@ function getDb() {
       hasFourStar INTEGER NOT NULL CHECK (hasFourStar IN (0,1)),
       fourStarEffect TEXT,
       imageUrl TEXT,
-      createdAt TEXT NOT NULL
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_monsters_createdAt ON monsters(createdAt DESC);
@@ -51,22 +48,51 @@ function getDb() {
   `)
 
   try {
-    db.exec(
+    database.exec(
       "CREATE UNIQUE INDEX IF NOT EXISTS uniq_monsters_name ON monsters(name COLLATE NOCASE)"
     )
   } catch {
     // If existing DB already has duplicate names, keep app-level checks as the source of truth.
   }
 
-  // Lightweight migration for existing DBs created before `element` existed.
-  const columns = db
+  // Lightweight migrations for existing DBs.
+  const columns = database
     .prepare("PRAGMA table_info(monsters)")
     .all() as Array<{ name: string }>
   if (!columns.some((c) => c.name === "element")) {
-    db.exec("ALTER TABLE monsters ADD COLUMN element TEXT NOT NULL DEFAULT '其他'")
-    db.exec("CREATE INDEX IF NOT EXISTS idx_monsters_element ON monsters(element)")
+    database.exec(
+      "ALTER TABLE monsters ADD COLUMN element TEXT NOT NULL DEFAULT '其他'"
+    )
+    database.exec(
+      "CREATE INDEX IF NOT EXISTS idx_monsters_element ON monsters(element)"
+    )
   }
 
+  if (!columns.some((c) => c.name === "updatedAt")) {
+    database.exec("ALTER TABLE monsters ADD COLUMN updatedAt TEXT")
+    database.exec(
+      "UPDATE monsters SET updatedAt = createdAt WHERE updatedAt IS NULL OR updatedAt = ''"
+    )
+  }
+
+  // Safe to create after `updatedAt` exists (older DBs may not have the column yet).
+  database.exec(
+    "CREATE INDEX IF NOT EXISTS idx_monsters_updatedAt ON monsters(updatedAt DESC)"
+  )
+
+  schemaEnsured = true
+}
+
+function getDb() {
+  if (!db) {
+    const filename = path.join(process.cwd(), "data", "app.db")
+    db = new Database(filename)
+    db.pragma("journal_mode = WAL")
+    db.pragma("foreign_keys = ON")
+    schemaEnsured = false
+  }
+
+  ensureSchema(db)
   return db
 }
 

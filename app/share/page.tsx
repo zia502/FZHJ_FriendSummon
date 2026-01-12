@@ -2,6 +2,13 @@ import { getFriendSummonByPlayerId } from "@/lib/friend-summons-store"
 import { getMonsters } from "@/lib/monsters-store"
 import { SharePage } from "@/components/share-page"
 
+function withVersion(url: string | undefined, version: string | undefined) {
+  if (!url) return undefined
+  if (!version) return url
+  const joiner = url.includes("?") ? "&" : "?"
+  return `${url}${joiner}v=${encodeURIComponent(version)}`
+}
+
 export default async function SharePageRoute({
   searchParams,
 }: {
@@ -23,7 +30,7 @@ export default async function SharePageRoute({
         name: m.name,
         element: m.element,
         type: m.type,
-        imageUrl: m.imageUrl,
+        imageUrl: withVersion(m.imageUrl, m.updatedAt),
       }))}
       initialPlayerId={id}
       initialSlotIds={existing?.slotIds ?? null}
@@ -31,4 +38,3 @@ export default async function SharePageRoute({
     />
   )
 }
-

@@ -15,6 +15,7 @@ type MonsterRecord = {
   fourStarEffect?: string
   imageUrl?: string
   createdAt: string
+  updatedAt: string
 }
 
 type GetMonstersParams = {
@@ -62,7 +63,8 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
       hasFourStar,
       fourStarEffect,
       imageUrl,
-      createdAt
+      createdAt,
+      COALESCE(updatedAt, createdAt) AS updatedAt
     FROM monsters
     ${whereSql}
     ORDER BY createdAt DESC
@@ -79,6 +81,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
     fourStarEffect: string | null
     imageUrl: string | null
     createdAt: string
+    updatedAt: string
   }>
 
   return rows.map((row) => ({
@@ -91,6 +94,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
     fourStarEffect: row.fourStarEffect ?? undefined,
     imageUrl: row.imageUrl ?? undefined,
     createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   }))
 }
 
@@ -114,8 +118,9 @@ async function addMonster(record: MonsterRecord) {
       hasFourStar,
       fourStarEffect,
       imageUrl,
-      createdAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      createdAt,
+      updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
 
   stmt.run(
@@ -127,7 +132,8 @@ async function addMonster(record: MonsterRecord) {
     record.hasFourStar ? 1 : 0,
     record.fourStarEffect ?? null,
     record.imageUrl ?? null,
-    record.createdAt
+    record.createdAt,
+    record.updatedAt
   )
 }
 
@@ -145,7 +151,8 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
         hasFourStar,
         fourStarEffect,
         imageUrl,
-        createdAt
+        createdAt,
+        COALESCE(updatedAt, createdAt) AS updatedAt
       FROM monsters
       WHERE id = ?
     `
@@ -161,6 +168,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
         fourStarEffect: string | null
         imageUrl: string | null
         createdAt: string
+        updatedAt: string
       }
     | undefined
 
@@ -175,6 +183,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
     fourStarEffect: row.fourStarEffect ?? undefined,
     imageUrl: row.imageUrl ?? undefined,
     createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   }
 }
 
@@ -198,7 +207,8 @@ async function updateMonster(record: Omit<MonsterRecord, "createdAt">) {
       mainEffect = ?,
       hasFourStar = ?,
       fourStarEffect = ?,
-      imageUrl = ?
+      imageUrl = ?,
+      updatedAt = ?
     WHERE id = ?
   `
   ).run(
@@ -209,6 +219,7 @@ async function updateMonster(record: Omit<MonsterRecord, "createdAt">) {
     record.hasFourStar ? 1 : 0,
     record.fourStarEffect ?? null,
     record.imageUrl ?? null,
+    record.updatedAt,
     record.id
   )
 }

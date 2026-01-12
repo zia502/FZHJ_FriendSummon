@@ -71,7 +71,7 @@ async function addMonsterAction(formData: FormData) {
     throw new Error("缺少必填项：魔物名")
   }
   if (!mainEffect) {
-    throw new Error("缺少必填项：主招效果")
+    throw new Error("缺少必填项：主位被动")
   }
   if (!isMonsterElement(elementRaw)) {
     throw new Error("缺少必填项：属性")
@@ -80,7 +80,7 @@ async function addMonsterAction(formData: FormData) {
     throw new Error("缺少必填项：类型")
   }
   if (hasFourStar && !fourStarEffect) {
-    throw new Error("已选择 4星主招效果，请填写 4星效果")
+    throw new Error("已选择 未满突主位被动，请填写 未满突效果")
   }
 
   const id = randomUUID()
@@ -112,6 +112,7 @@ async function addMonsterAction(formData: FormData) {
     fourStarEffect: hasFourStar ? fourStarEffect : undefined,
     imageUrl,
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
 
   await addMonster(record)
@@ -135,11 +136,11 @@ async function updateMonsterAction(formData: FormData) {
   const fourStarEffect = String(formData.get("fourStarEffect") ?? "").trim()
 
   if (!name) throw new Error("缺少必填项：魔物名")
-  if (!mainEffect) throw new Error("缺少必填项：主招效果")
+  if (!mainEffect) throw new Error("缺少必填项：主位被动")
   if (!isMonsterElement(elementRaw)) throw new Error("缺少必填项：属性")
   if (!isMonsterType(typeRaw)) throw new Error("缺少必填项：类型")
   if (hasFourStar && !fourStarEffect) {
-    throw new Error("已选择 4星主招效果，请填写 4星效果")
+    throw new Error("已选择 未满突主位被动，请填写 未满突效果")
   }
 
   let imageUrl = existing.imageUrl
@@ -168,6 +169,7 @@ async function updateMonsterAction(formData: FormData) {
     hasFourStar,
     fourStarEffect: hasFourStar ? fourStarEffect : undefined,
     imageUrl,
+    updatedAt: new Date().toISOString(),
   })
 
   revalidatePath("/admin")

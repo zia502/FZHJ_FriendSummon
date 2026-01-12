@@ -3,6 +3,13 @@ import type { MonsterSlot, SummonListItem } from "@/components/summon-card"
 import { getMonsters } from "@/lib/monsters-store"
 import { getFriendSummonsPage } from "@/lib/friend-summons-store"
 
+function withVersion(url: string | undefined, version: string | undefined) {
+  if (!url) return undefined
+  if (!version) return url
+  const joiner = url.includes("?") ? "&" : "?"
+  return `${url}${joiner}v=${encodeURIComponent(version)}`
+}
+
 function pickFirst(
   monsters: MonsterSlot[],
   element: MonsterSlot["element"]
@@ -28,7 +35,7 @@ export default async function Page({
     mainEffect: m.mainEffect,
     hasFourStar: m.hasFourStar,
     fourStarEffect: m.fourStarEffect,
-    imageUrl: m.imageUrl,
+    imageUrl: withVersion(m.imageUrl, m.updatedAt),
   }))
   const monstersById = new Map(monsterOptions.map((m) => [m.id, m]))
 

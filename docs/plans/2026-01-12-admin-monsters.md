@@ -48,10 +48,10 @@
 **Steps:**
 1. Add a “魔物管理” card containing a form:
    - Required: 魔物名 (`<Input name="name">`)
-   - Required: 主招效果 (`<Textarea name="mainEffect">`)
+   - Required: 主位被动 (`<Textarea name="mainEffect">`)
    - Required: 类型 (`radio`: 神 / 魔 / 属性)
    - Optional: 魔物图片 (`<Input name="image" type="file" accept="image/*">`)
-   - Optional: “有 4星主招效果” checkbox; when checked show `<Textarea name="fourStarEffect">` and require it server-side
+   - Optional: “有 未满突主位被动” checkbox; when checked show `<Textarea name="fourStarEffect">` and require it server-side
 2. Under the form, show “最新添加的 5 个魔物”:
    - Provide search controls (GET): `q` (name/effects), `type` (神/魔/属性/全部)
    - Display up to 5 results, newest first

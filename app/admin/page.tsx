@@ -10,6 +10,13 @@ import { adminLogin, adminLogout } from "@/app/admin/actions"
 import { addMonsterAction, deleteMonsterAction } from "@/app/admin/monsters/actions"
 import { getMonsters, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
 
+function withVersion(url: string | undefined, version: string | undefined) {
+  if (!url) return undefined
+  if (!version) return url
+  const joiner = url.includes("?") ? "&" : "?"
+  return `${url}${joiner}v=${encodeURIComponent(version)}`
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
@@ -139,10 +146,10 @@ export default async function AdminPage({
             </div>
 
             <div className="grid gap-2">
-              <div className="text-sm font-medium">主招效果（必填）</div>
+              <div className="text-sm font-medium">主位被动（必填）</div>
               <Textarea
                 name="mainEffect"
-                placeholder="请输入主招效果描述"
+                placeholder="请输入主位被动描述"
                 required
               />
             </div>
@@ -166,7 +173,7 @@ export default async function AdminPage({
             </div>
 
             <div className="grid gap-2">
-              <div className="text-sm font-medium">主招效果类型（必选）</div>
+              <div className="text-sm font-medium">主位被动类型（必选）</div>
               <div className="flex items-center gap-4">
                 {typeOptions.map((t) => (
                   <label key={t} className="flex items-center gap-2 text-sm">
@@ -191,14 +198,14 @@ export default async function AdminPage({
             <div className="grid gap-2">
               <label className="flex items-center gap-2 text-sm font-medium">
                 <input type="checkbox" name="hasFourStar" className="accent-primary" />
-                有 4星主招效果（可选）
+                有 未满突主位被动（可选）
               </label>
               <Textarea
                 name="fourStarEffect"
-                placeholder="勾选后填写 4星主招效果"
+                placeholder="勾选后填写 未满突主位被动"
               />
               <div className="text-muted-foreground text-xs">
-                注意：勾选后 4星效果将变为必填（校验在服务端）。
+                注意：勾选后 未满突效果将变为必填（校验在服务端）。
               </div>
             </div>
 
@@ -267,7 +274,7 @@ export default async function AdminPage({
                   >
                     <div className="bg-muted ring-foreground/10 overflow-hidden rounded-md ring-1">
                       <Image
-                        src={monster.imageUrl ?? "/summon-placeholder.svg"}
+                        src={withVersion(monster.imageUrl, monster.updatedAt) ?? "/summon-placeholder.svg"}
                         alt={monster.name}
                         width={48}
                         height={48}
@@ -293,7 +300,7 @@ export default async function AdminPage({
                       </div>
                       {monster.hasFourStar && monster.fourStarEffect && (
                         <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-                          4星：{monster.fourStarEffect}
+                          未满突：{monster.fourStarEffect}
                         </div>
                       )}
                       {isSuperAdmin && (

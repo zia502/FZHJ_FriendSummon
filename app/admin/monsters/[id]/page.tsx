@@ -52,7 +52,7 @@ export default async function MonsterEditPage({
             </div>
 
             <div className="grid gap-2">
-              <div className="text-sm font-medium">主招效果（必填）</div>
+              <div className="text-sm font-medium">主位被动（必填）</div>
               <Textarea name="mainEffect" defaultValue={monster.mainEffect} required />
             </div>
 
@@ -107,12 +107,12 @@ export default async function MonsterEditPage({
                   className="accent-primary"
                   defaultChecked={monster.hasFourStar}
                 />
-                有 4星主招效果（可选）
+                有 未满突主位被动（可选）
               </label>
               <Textarea
                 name="fourStarEffect"
                 defaultValue={monster.fourStarEffect ?? ""}
-                placeholder="勾选后填写 4星主招效果"
+                placeholder="勾选后填写 未满突主位被动"
               />
             </div>
 
