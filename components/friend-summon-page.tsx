@@ -165,14 +165,14 @@ function FriendSummonPage({
         </div>
 
         <div className="text-muted-foreground mt-6 text-center text-xs">
-          如果遇到问题,请{"提交issue"}
+          如果遇到问题，请{" "}
           <a
             href="https://github.com/zia502/FZHJ_FriendSummon/issues"
             target="_blank"
             rel="noreferrer"
             className="underline underline-offset-2"
           >
-            https://github.com/zia502/FZHJ_FriendSummon/issues
+            提交 issue
           </a>
         </div>
       </div>

@@ -7,9 +7,23 @@ import { CopyIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-function formatIso(value: string) {
-  // Deterministic formatting to avoid locale differences.
-  return value.replace("T", " ").slice(0, 19)
+function pad2(value: number) {
+  return String(value).padStart(2, "0")
+}
+
+function formatUtc8(value: string) {
+  const ms = Date.parse(value)
+  if (!Number.isFinite(ms)) return value
+
+  // Deterministic formatting in UTC+8 (no locale differences).
+  const shifted = new Date(ms + 8 * 60 * 60 * 1000)
+  const y = shifted.getUTCFullYear()
+  const m = pad2(shifted.getUTCMonth() + 1)
+  const d = pad2(shifted.getUTCDate())
+  const hh = pad2(shifted.getUTCHours())
+  const mm = pad2(shifted.getUTCMinutes())
+  const ss = pad2(shifted.getUTCSeconds())
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
 }
 
 async function copyToClipboard(text: string) {
@@ -124,7 +138,7 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
                     alt={slot?.name ?? "魔物"}
                     width={64}
                     height={64}
-                    className="block size-16 rounded-md object-cover"
+                    className="block size-16 rounded-md object-contain"
                     priority={false}
                   />
                 ) : slot ? (
@@ -175,8 +189,8 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
       </div>
 
       <div className="text-muted-foreground mt-2 flex items-center justify-between text-xs">
-        <span>创建：{formatIso(item.createdAt)}</span>
-        <span>修改：{formatIso(item.updatedAt)}</span>
+        <span>创建：{formatUtc8(item.createdAt)}</span>
+        <span>修改：{formatUtc8(item.updatedAt)}</span>
       </div>
     </div>
   )

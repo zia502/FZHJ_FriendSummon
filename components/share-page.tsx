@@ -52,6 +52,10 @@ function SharePage({
 
   const numericId = playerId.replace(/[^\d]/g, "")
 
+  const monstersById = React.useMemo(() => {
+    return new Map(monsters.map((m) => [m.id, m]))
+  }, [monsters])
+
   const monstersFor = React.useMemo(() => {
     return {
       火: monsters.filter((m) => m.element === "火"),
@@ -62,14 +66,20 @@ function SharePage({
     } as const
   }, [monsters])
 
-  const slotDefaults = React.useMemo(() => {
+  const initialSlots = React.useMemo(() => {
     if (!initialSlotIds) return Array.from({ length: 10 }, () => "")
     return Array.from({ length: 10 }, (_, i) => initialSlotIds[i] ?? "")
   }, [initialSlotIds])
 
+  const [slotIds, setSlotIds] = React.useState<Array<string>>(() => initialSlots)
+
+  React.useEffect(() => {
+    setSlotIds(initialSlots)
+  }, [initialSlots])
+
   return (
     <main className="bg-background min-h-screen">
-      <div className="mx-auto w-full max-w-md px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-lg px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-foreground text-xl font-bold tracking-tight">
             我要分享 / 编辑
@@ -120,14 +130,19 @@ function SharePage({
             <div className="text-sm font-medium">10 个栏位</div>
             <div className="overflow-x-auto pb-1">
               <div className="grid min-w-[420px] grid-cols-5 gap-2">
-                {slotDefaults.map((defaultValue, index) => {
+                {slotIds.map((value, index) => {
                   const el = slotElement(index)
                   const options = monstersFor[el]
                   return (
                     <div key={index} className="grid min-w-0 gap-1">
                       <select
                         name={`slot${index}`}
-                        defaultValue={defaultValue}
+                        value={value}
+                        onChange={(e) => {
+                          const next = [...slotIds]
+                          next[index] = e.target.value
+                          setSlotIds(next)
+                        }}
                         className={cn(
                           "border-input bg-background h-9 w-full min-w-0 rounded-md border px-2 text-xs",
                           "ring-2 ring-inset",
@@ -159,17 +174,36 @@ function SharePage({
         <div className="mt-6 border-t pt-4" />
 
         <div className="mt-3 grid grid-cols-5 gap-2">
-          {Array.from({ length: 10 }, (_, i) => i).map((index) => (
-            <div key={index} className={cn("ring-2 ring-inset", slotRingClass(index), "rounded-md")}>
-              <Image
-                src="/summon-placeholder.svg"
-                alt="预览"
-                width={64}
-                height={64}
-                className="block size-16 rounded-md object-cover"
-              />
-            </div>
-          ))}
+          {slotIds.map((id, index) => {
+            const monster = id ? monstersById.get(id) : undefined
+            const initial = monster?.name?.trim()?.slice(0, 1) ?? ""
+            const hasImage = !!monster?.imageUrl
+            return (
+              <div key={index} className="flex items-center justify-center">
+                <div
+                  className={cn(
+                    "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset",
+                    slotRingClass(index)
+                  )}
+                >
+                  {hasImage ? (
+                    <Image
+                      src={monster!.imageUrl!}
+                      alt={monster?.name ?? "魔物"}
+                      width={64}
+                      height={64}
+                      className="block size-16 rounded-md object-contain"
+                      priority={false}
+                    />
+                  ) : monster ? (
+                    <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">
+                      {initial}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </main>

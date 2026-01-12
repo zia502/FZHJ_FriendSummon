@@ -5,7 +5,7 @@ export default function SkillSharePage() {
         技能轴分享
       </h1>
       <p className="text-muted-foreground mt-2 text-sm">
-        UI 模板页：后续可以在这里展示玩家分享的技能轴列表与详情。
+        锐意开发中...
       </p>
     </main>
   )

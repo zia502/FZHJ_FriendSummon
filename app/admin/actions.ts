@@ -1,13 +1,13 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 async function adminLogin(formData: FormData) {
-  const password = String(formData.get("password") ?? "")
+  const password = String(formData.get("password") ?? "").trim()
 
-  const adminPassword = process.env.ADMIN_PASSWORD
-  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD
+  const adminPassword = (process.env.ADMIN_PASSWORD ?? "").trim()
+  const superAdminPassword = (process.env.SUPER_ADMIN_PASSWORD ?? "").trim()
   if (!adminPassword && !superAdminPassword) {
     redirect("/admin?error=missing_env")
   }
@@ -23,18 +23,25 @@ async function adminLogin(formData: FormData) {
     redirect("/admin?error=1")
   }
 
+  const headerStore = await headers()
+  const forwardedProto = (headerStore.get("x-forwarded-proto") ?? "").toLowerCase()
+  const referer = (headerStore.get("referer") ?? "").toLowerCase()
+  const isHttps =
+    forwardedProto === "https" ||
+    referer.startsWith("https://")
+
   const cookieStore = await cookies()
   cookieStore.set("admin_auth", "1", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" ? isHttps : false,
     path: "/",
     maxAge: 60 * 60 * 24,
   })
   cookieStore.set("admin_role", role, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" ? isHttps : false,
     path: "/",
     maxAge: 60 * 60 * 24,
   })

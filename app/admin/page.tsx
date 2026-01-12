@@ -21,10 +21,16 @@ export default async function AdminPage({
   const isSuperAdmin = role === "super"
 
   const params = await searchParams
-  const hasError = params?.error === "1"
+  const errorParam = String(params?.error ?? "")
+  const hasError = errorParam === "1"
+  const forbidden = errorParam === "forbidden"
+  const debug = String(params?.debug ?? "") === "1"
+
+  const adminConfigured = !!(process.env.ADMIN_PASSWORD ?? "").trim()
+  const superConfigured = !!(process.env.SUPER_ADMIN_PASSWORD ?? "").trim()
   const missingEnv =
-    params?.error === "missing_env" ||
-    (!process.env.ADMIN_PASSWORD && !process.env.SUPER_ADMIN_PASSWORD)
+    errorParam === "missing_env" ||
+    (!adminConfigured && !superConfigured)
   const q = String(params?.q ?? "").trim()
   const type = String(params?.type ?? "").trim()
   const element = String(params?.element ?? "").trim()
@@ -47,6 +53,12 @@ export default async function AdminPage({
                   `.env.local` 里设置后重启服务。
                 </div>
               )}
+              {debug && (
+                <div className="text-muted-foreground text-xs">
+                  环境变量：ADMIN_PASSWORD {adminConfigured ? "已配置" : "未配置"} /
+                  SUPER_ADMIN_PASSWORD {superConfigured ? "已配置" : "未配置"}
+                </div>
+              )}
               <Input
                 name="password"
                 type="password"
@@ -56,6 +68,11 @@ export default async function AdminPage({
               />
               {hasError && (
                 <div className="text-destructive text-sm">密码错误</div>
+              )}
+              {forbidden && (
+                <div className="text-destructive text-sm">
+                  权限不足：需要超级管理员。
+                </div>
               )}
               <Button type="submit" disabled={missingEnv}>
                 进入
