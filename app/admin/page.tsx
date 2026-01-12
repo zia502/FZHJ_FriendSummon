@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { adminLogin, adminLogout } from "@/app/admin/actions"
+import { deleteFriendSummonAction } from "@/app/admin/friend-summons/actions"
 import { addMonsterAction, deleteMonsterAction } from "@/app/admin/monsters/actions"
+import { getFriendSummonByPlayerId } from "@/lib/friend-summons-store"
 import { getMonsters, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
 
 function withVersion(url: string | undefined, version: string | undefined) {
@@ -41,6 +43,12 @@ export default async function AdminPage({
   const q = String(params?.q ?? "").trim()
   const type = String(params?.type ?? "").trim()
   const element = String(params?.element ?? "").trim()
+
+  const fsPlayerId = String(params?.fs_playerId ?? "").trim()
+  const fsError = String(params?.fs_error ?? "").trim()
+  const fsDeleted = String(params?.fs_deleted ?? "").trim()
+  const friendSummonRecord =
+    isSuperAdmin && fsPlayerId ? await getFriendSummonByPlayerId(fsPlayerId) : null
 
   if (!authed) {
     return (
@@ -91,7 +99,7 @@ export default async function AdminPage({
     )
   }
 
-  const typeParam = (type === "神" || type === "魔" || type === "属性" || type === "全部" ? type : "全部") as
+  const typeParam = (type === "神" || type === "魔" || type === "属性" || type === "其他" || type === "全部" ? type : "全部") as
     | MonsterType
     | "全部"
 
@@ -99,7 +107,6 @@ export default async function AdminPage({
   element === "风" ||
   element === "土" ||
   element === "水" ||
-  element === "其他" ||
   element === "全部"
     ? element
     : "全部") as MonsterElement | "全部"
@@ -111,8 +118,8 @@ export default async function AdminPage({
     limit: 5,
   })
 
-  const typeOptions: Array<MonsterType> = ["神", "魔", "属性"]
-  const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水", "其他"]
+  const typeOptions: Array<MonsterType> = ["神", "魔", "属性", "其他"]
+  const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水"]
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-6 sm:px-6">
@@ -334,6 +341,113 @@ export default async function AdminPage({
           </div>
         </CardContent>
       </Card>
+
+      {isSuperAdmin && (
+        <Card className="mt-4" id="friend-summons">
+          <CardHeader>
+            <CardTitle>好友募集查询器</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-muted-foreground text-sm">
+              用于通过玩家ID定位/清理异常好友募集记录。
+            </div>
+
+            <form
+              className="mt-3 grid gap-2"
+              action="/admin#friend-summons"
+              method="get"
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  name="fs_playerId"
+                  placeholder="玩家ID（playerId）"
+                  defaultValue={fsPlayerId}
+                />
+                <Button type="submit" variant="outline">
+                  查询
+                </Button>
+              </div>
+            </form>
+
+            {fsError === "missing_id" && (
+              <div className="text-destructive mt-2 text-sm">请输入玩家ID</div>
+            )}
+            {fsError === "confirm_mismatch" && (
+              <div className="text-destructive mt-2 text-sm">
+                确认ID不一致，未执行删除
+              </div>
+            )}
+            {fsDeleted === "1" && <div className="mt-2 text-sm">已删除记录</div>}
+            {fsDeleted === "0" && (
+              <div className="text-muted-foreground mt-2 text-sm">
+                未找到可删除记录
+              </div>
+            )}
+
+            {fsPlayerId && (
+              <div className="mt-4 grid gap-3">
+                {friendSummonRecord ? (
+                  <>
+                    <div className="ring-foreground/10 bg-background grid gap-2 rounded-lg p-3 ring-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-sm font-semibold">
+                          玩家ID：{friendSummonRecord.playerId}
+                        </div>
+                      </div>
+                      <div className="text-muted-foreground text-xs">
+                        createdAt：{friendSummonRecord.createdAt}
+                      </div>
+                      <div className="text-muted-foreground text-xs">
+                        updatedAt：{friendSummonRecord.updatedAt}
+                      </div>
+                      <div className="mt-2 grid gap-1">
+                        {friendSummonRecord.slotIds.map((slotId, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between gap-3 text-xs"
+                          >
+                            <span className="text-muted-foreground">
+                              槽位{idx + 1}
+                            </span>
+                            <code className="bg-muted text-foreground/80 rounded px-2 py-0.5">
+                              {slotId ?? "-"}
+                            </code>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <form
+                      action={deleteFriendSummonAction}
+                      className="grid gap-2"
+                    >
+                      <input
+                        type="hidden"
+                        name="playerId"
+                        value={friendSummonRecord.playerId}
+                      />
+                      <div className="text-muted-foreground text-xs">
+                        删除操作不可逆：请再次输入同样的玩家ID以确认。
+                      </div>
+                      <Input
+                        name="confirmPlayerId"
+                        placeholder="确认玩家ID（必须完全一致）"
+                      />
+                      <Button type="submit" variant="destructive">
+                        删除这条记录
+                      </Button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="text-muted-foreground text-sm">
+                    未找到记录：{fsPlayerId}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </main>
   )
 }

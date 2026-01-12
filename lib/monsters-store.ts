@@ -2,13 +2,14 @@ import "server-only"
 
 import { getDb } from "@/lib/db"
 
-type MonsterType = "神" | "魔" | "属性"
-type MonsterElement = "火" | "风" | "土" | "水" | "其他"
+type MonsterType = "神" | "魔" | "属性" | "其他"
+type MonsterElement = "火" | "风" | "土" | "水" | "光" | "暗"
+type MonsterElementValue = MonsterElement | "未设置"
 
 type MonsterRecord = {
   id: string
   name: string
-  element: MonsterElement
+  element: MonsterElementValue
   type: MonsterType
   mainEffect: string
   hasFourStar: boolean
@@ -23,6 +24,31 @@ type GetMonstersParams = {
   type?: MonsterType | "全部"
   element?: MonsterElement | "全部"
   limit?: number
+}
+
+function isMonsterElement(value: string): value is MonsterElement {
+  return (
+    value === "火" ||
+    value === "风" ||
+    value === "土" ||
+    value === "水" ||
+    value === "光" ||
+    value === "暗"
+  )
+}
+
+function normalizeMonsterElement(value: unknown): MonsterElementValue {
+  const text = String(value ?? "").trim()
+  if (isMonsterElement(text)) return text
+  return "未设置"
+}
+
+function assertWritableMonsterElement(
+  value: MonsterElementValue
+): asserts value is MonsterElement {
+  if (value === "未设置") {
+    throw new Error("魔物属性未设置，请先在后台选择 火/风/土/水")
+  }
 }
 
 async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecord[]> {
@@ -74,7 +100,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
   const rows = stmt.all(...values, limit) as Array<{
     id: string
     name: string
-    element: MonsterElement
+    element: string
     type: MonsterType
     mainEffect: string
     hasFourStar: 0 | 1
@@ -87,7 +113,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
-    element: row.element,
+    element: normalizeMonsterElement(row.element),
     type: row.type,
     mainEffect: row.mainEffect,
     hasFourStar: row.hasFourStar === 1,
@@ -100,6 +126,7 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
 
 async function addMonster(record: MonsterRecord) {
   const db = getDb()
+  assertWritableMonsterElement(record.element)
   const exists = db
     .prepare(
       "SELECT 1 FROM monsters WHERE name = ? COLLATE NOCASE LIMIT 1"
@@ -161,7 +188,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
     | {
         id: string
         name: string
-        element: MonsterElement
+        element: string
         type: MonsterType
         mainEffect: string
         hasFourStar: 0 | 1
@@ -176,7 +203,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
   return {
     id: row.id,
     name: row.name,
-    element: row.element,
+    element: normalizeMonsterElement(row.element),
     type: row.type,
     mainEffect: row.mainEffect,
     hasFourStar: row.hasFourStar === 1,
@@ -189,6 +216,7 @@ async function getMonsterById(id: string): Promise<MonsterRecord | null> {
 
 async function updateMonster(record: Omit<MonsterRecord, "createdAt">) {
   const db = getDb()
+  assertWritableMonsterElement(record.element)
   const exists = db
     .prepare(
       "SELECT 1 FROM monsters WHERE name = ? COLLATE NOCASE AND id <> ? LIMIT 1"

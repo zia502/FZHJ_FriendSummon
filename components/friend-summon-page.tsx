@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { SummonCard, type SummonListItem } from "@/components/summon-card"
 import type { MonsterOption } from "@/components/share-dialog"
 
-type ElementKey = "火" | "风" | "土" | "水" | "其他"
+type SlotColumnKey = "火" | "风" | "土" | "水" | "任意"
 
 function FriendSummonPage({
   initialItems,
@@ -23,12 +23,12 @@ function FriendSummonPage({
   hasNext: boolean
 }) {
   const items = initialItems
-  const [filters, setFilters] = React.useState<Record<ElementKey, string[]>>({
+  const [filters, setFilters] = React.useState<Record<SlotColumnKey, string[]>>({
     火: [],
     风: [],
     土: [],
     水: [],
-    其他: [],
+    任意: [],
   })
 
   const monstersFor = React.useMemo(() => {
@@ -37,8 +37,8 @@ function FriendSummonPage({
       风: monsters.filter((m) => m.element === "风"),
       土: monsters.filter((m) => m.element === "土"),
       水: monsters.filter((m) => m.element === "水"),
-      其他: monsters,
-    } satisfies Record<ElementKey, MonsterOption[]>
+      任意: monsters,
+    } satisfies Record<SlotColumnKey, MonsterOption[]>
   }, [monsters])
 
   const filtered = React.useMemo(() => {
@@ -55,14 +55,14 @@ function FriendSummonPage({
       if (!matchesAny(filters["风"], pick([1, 6]))) return false
       if (!matchesAny(filters["土"], pick([2, 7]))) return false
       if (!matchesAny(filters["水"], pick([3, 8]))) return false
-      if (!matchesAny(filters["其他"], pick([4, 9]))) return false
+      if (!matchesAny(filters["任意"], pick([4, 9]))) return false
 
       return true
     })
   }, [items, filters])
 
   const toggleFilter = React.useCallback(
-    (el: ElementKey, monsterId: string) => {
+    (el: SlotColumnKey, monsterId: string) => {
       setFilters((prev) => {
         const current = prev[el]
         const next = current.includes(monsterId)
@@ -74,7 +74,7 @@ function FriendSummonPage({
     []
   )
 
-  const clearFilter = React.useCallback((el: ElementKey) => {
+  const clearFilter = React.useCallback((el: SlotColumnKey) => {
     setFilters((prev) => ({ ...prev, [el]: [] }))
   }, [])
 
@@ -83,7 +83,7 @@ function FriendSummonPage({
       <div className="mx-auto w-full max-w-md px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-foreground text-xl font-bold tracking-tight">
-            友招招募列表
+            好友招募列表
           </h1>
           <Button asChild>
             <Link href="/share">我要分享</Link>
@@ -92,14 +92,14 @@ function FriendSummonPage({
 
         <div className="mt-3 grid gap-2">
           <div className="grid grid-cols-2 gap-2">
-            {(["火", "风", "土", "水", "其他"] as const).map((el) => (
+            {(["火", "风", "土", "水", "任意"] as const).map((el) => (
               <details
                 key={el}
                 className="border-input bg-background rounded-md border"
               >
                 <summary className="text-foreground flex cursor-pointer list-none items-center justify-between px-2 py-2 text-sm">
                   <span>
-                    {el}属性
+                    {el === "任意" ? "任意列" : `${el}属性`}
                     {filters[el].length > 0 ? `（${filters[el].length}）` : "（全部）"}
                   </span>
                   <span className="text-muted-foreground text-xs">展开</span>
@@ -141,7 +141,7 @@ function FriendSummonPage({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setFilters({ 火: [], 风: [], 土: [], 水: [], 其他: [] })}
+              onClick={() => setFilters({ 火: [], 风: [], 土: [], 水: [], 任意: [] })}
             >
               清空过滤
             </Button>

@@ -113,6 +113,14 @@ async function getFriendSummonByPlayerId(playerId: string): Promise<FriendSummon
   }
 }
 
+async function deleteFriendSummonByPlayerId(playerId: string): Promise<boolean> {
+  const db = getDb()
+  const result = db
+    .prepare("DELETE FROM friend_summons WHERE playerId = ?")
+    .run(playerId) as unknown as { changes: number }
+  return result.changes > 0
+}
+
 async function upsertFriendSummon({
   playerId,
   slotIds,
@@ -165,5 +173,10 @@ async function upsertFriendSummon({
 }
 
 export type { FriendSummonRecord, GetFriendSummonsPageResult }
-export { getFriendSummonByPlayerId, getFriendSummonsPage, upsertFriendSummon }
+export {
+  deleteFriendSummonByPlayerId,
+  getFriendSummonByPlayerId,
+  getFriendSummonsPage,
+  upsertFriendSummon,
+}
 

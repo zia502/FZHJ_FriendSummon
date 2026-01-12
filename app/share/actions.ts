@@ -13,7 +13,7 @@ function slotElement(index: number) {
   if (col === 1) return "风"
   if (col === 2) return "土"
   if (col === 3) return "水"
-  return "其他"
+  return "任意"
 }
 
 async function upsertFriendSummonAction(formData: FormData) {
@@ -44,7 +44,7 @@ async function upsertFriendSummonAction(formData: FormData) {
     }
 
     const required = slotElement(i)
-    if (required !== "其他" && monster.element !== required) {
+    if (required !== "任意" && monster.element !== required) {
       redirect(`/share?id=${playerId}&error=bad_element`)
     }
 

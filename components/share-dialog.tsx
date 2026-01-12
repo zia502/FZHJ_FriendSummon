@@ -23,13 +23,15 @@ import type { MonsterSlot, SummonListItem } from "@/components/summon-card"
 
 type MonsterOption = MonsterSlot
 
-function slotElement(index: number): MonsterSlot["element"] {
+type SlotColumnKey = "火" | "风" | "土" | "水" | "任意"
+
+function slotElement(index: number): SlotColumnKey {
   const col = index % 5
   if (col === 0) return "火"
   if (col === 1) return "风"
   if (col === 2) return "土"
   if (col === 3) return "水"
-  return "其他"
+  return "任意"
 }
 
 function slotRingClass(index: number) {
@@ -63,7 +65,7 @@ function ShareDialog({
   const filteredOptionsForSlot = React.useCallback(
     (index: number) => {
       const el = slotElement(index)
-      if (el === "其他") return monsters
+      if (el === "任意") return monsters
       return monsters.filter((m) => m.element === el)
     },
     [monsters]
@@ -89,7 +91,7 @@ function ShareDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>分享友招配置</AlertDialogTitle>
           <AlertDialogDescription>
-            填写玩家 ID，并为 10 个栏位选择魔物（按列限制属性：火/风/土/水/其他）。
+            填写玩家 ID，并为 10 个栏位选择魔物（按列限制属性：火/风/土/水/任意）。
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -167,7 +169,7 @@ function ShareDialog({
               </div>
             </div>
             <div className="text-muted-foreground text-xs">
-              “其他”栏位可选择任意魔物，其余栏位只能选同属性魔物。
+              “任意”栏位可选择任意魔物，其余栏位只能选同属性魔物。
             </div>
           </div>
 

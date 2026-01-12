@@ -2,6 +2,7 @@
   "name": "fzhj_friendsummon",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "next dev -p 5177",
     "build": "next build",

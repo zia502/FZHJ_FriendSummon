@@ -66,8 +66,8 @@ type SummonListItem = {
 type MonsterSlot = {
   id: string
   name: string
-  element: "火" | "风" | "土" | "水" | "其他"
-  type: "神" | "魔" | "属性"
+  element: "火" | "风" | "土" | "水" | "光" | "暗" | "未设置"
+  type: "神" | "魔" | "属性" | "其他"
   mainEffect: string
   hasFourStar: boolean
   fourStarEffect?: string

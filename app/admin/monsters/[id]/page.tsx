@@ -24,8 +24,8 @@ export default async function MonsterEditPage({
   const monster = await getMonsterById(id)
   if (!monster) redirect("/admin#monsters")
 
-  const typeOptions: Array<MonsterType> = ["神", "魔", "属性"]
-  const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水", "其他"]
+  const typeOptions: Array<MonsterType> = ["神", "魔", "属性", "其他"]
+  const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水"]
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-6 sm:px-6 sm:py-10">

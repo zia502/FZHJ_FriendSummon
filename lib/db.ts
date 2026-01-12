@@ -13,8 +13,8 @@ function ensureSchema(database: Database.Database) {
     CREATE TABLE IF NOT EXISTS monsters (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      element TEXT NOT NULL DEFAULT '其他',
-      type TEXT NOT NULL CHECK (type IN ('神','魔','属性')),
+      element TEXT NOT NULL DEFAULT '未设置',
+      type TEXT NOT NULL CHECK (type IN ('神','魔','属性','其他')),
       mainEffect TEXT NOT NULL,
       hasFourStar INTEGER NOT NULL CHECK (hasFourStar IN (0,1)),
       fourStarEffect TEXT,
@@ -61,7 +61,7 @@ function ensureSchema(database: Database.Database) {
     .all() as Array<{ name: string }>
   if (!columns.some((c) => c.name === "element")) {
     database.exec(
-      "ALTER TABLE monsters ADD COLUMN element TEXT NOT NULL DEFAULT '其他'"
+      "ALTER TABLE monsters ADD COLUMN element TEXT NOT NULL DEFAULT '未设置'"
     )
     database.exec(
       "CREATE INDEX IF NOT EXISTS idx_monsters_element ON monsters(element)"
@@ -73,6 +73,96 @@ function ensureSchema(database: Database.Database) {
     database.exec(
       "UPDATE monsters SET updatedAt = createdAt WHERE updatedAt IS NULL OR updatedAt = ''"
     )
+  }
+
+  // Normalize legacy placeholder values for element.
+  database.exec(
+    "UPDATE monsters SET element = '未设置' WHERE element IS NULL OR element = '' OR element = '其他'"
+  )
+
+  // Expand allowed type values for older DBs that were created with a narrower CHECK constraint.
+  // SQLite doesn't support altering CHECK constraints in place, so we rebuild the table when needed.
+  const monstersSqlRow = database
+    .prepare(
+      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'monsters'"
+    )
+    .get() as { sql?: string } | undefined
+  const monstersSql = monstersSqlRow?.sql ?? ""
+  const hasTypeCheck = /CHECK\s*\(\s*type\s+IN\s*\(/i.test(monstersSql)
+  const allowsOtherType = /CHECK\s*\(\s*type\s+IN\s*\([^)]*'其他'/i.test(monstersSql)
+  if (hasTypeCheck && !allowsOtherType) {
+    database.exec("BEGIN")
+    try {
+      database.exec(`
+        CREATE TABLE monsters_new (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          element TEXT NOT NULL DEFAULT '未设置',
+          type TEXT NOT NULL CHECK (type IN ('神','魔','属性','其他')),
+          mainEffect TEXT NOT NULL,
+          hasFourStar INTEGER NOT NULL CHECK (hasFourStar IN (0,1)),
+          fourStarEffect TEXT,
+          imageUrl TEXT,
+          createdAt TEXT NOT NULL,
+          updatedAt TEXT
+        );
+      `)
+
+      database.exec(`
+        INSERT INTO monsters_new (
+          id,
+          name,
+          element,
+          type,
+          mainEffect,
+          hasFourStar,
+          fourStarEffect,
+          imageUrl,
+          createdAt,
+          updatedAt
+        )
+        SELECT
+          id,
+          name,
+          element,
+          type,
+          mainEffect,
+          hasFourStar,
+          fourStarEffect,
+          imageUrl,
+          createdAt,
+          updatedAt
+        FROM monsters;
+      `)
+
+      database.exec("DROP TABLE monsters")
+      database.exec("ALTER TABLE monsters_new RENAME TO monsters")
+
+      database.exec(`
+        CREATE INDEX IF NOT EXISTS idx_monsters_createdAt ON monsters(createdAt DESC);
+        CREATE INDEX IF NOT EXISTS idx_monsters_type ON monsters(type);
+        CREATE INDEX IF NOT EXISTS idx_monsters_element ON monsters(element);
+        CREATE INDEX IF NOT EXISTS idx_monsters_name ON monsters(name);
+        CREATE INDEX IF NOT EXISTS idx_monsters_updatedAt ON monsters(updatedAt DESC);
+      `)
+
+      try {
+        database.exec(
+          "CREATE UNIQUE INDEX IF NOT EXISTS uniq_monsters_name ON monsters(name COLLATE NOCASE)"
+        )
+      } catch {
+        // If existing DB already has duplicate names, keep app-level checks as the source of truth.
+      }
+
+      database.exec("COMMIT")
+    } catch (error) {
+      try {
+        database.exec("ROLLBACK")
+      } catch {
+        // ignore
+      }
+      throw error
+    }
   }
 
   // Safe to create after `updatedAt` exists (older DBs may not have the column yet).

@@ -11,14 +11,6 @@ function withVersion(url: string | undefined, version: string | undefined) {
   return `${url}${joiner}v=${encodeURIComponent(version)}`
 }
 
-function pickFirst(
-  monsters: MonsterSlot[],
-  element: MonsterSlot["element"]
-): MonsterSlot | null {
-  if (element === "其他") return monsters[0] ?? null
-  return monsters.find((m) => m.element === element) ?? null
-}
-
 export default async function Page({
   searchParams,
 }: {
@@ -72,25 +64,7 @@ export default async function Page({
             }
           }) as SummonListItem["slots"],
         }))
-      : [
-          {
-            playerId: "10482917",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            slots: [
-              pickFirst(monsterOptions, "火"),
-              pickFirst(monsterOptions, "风"),
-              pickFirst(monsterOptions, "土"),
-              pickFirst(monsterOptions, "水"),
-              pickFirst(monsterOptions, "其他"),
-              pickFirst(monsterOptions, "火"),
-              pickFirst(monsterOptions, "风"),
-              pickFirst(monsterOptions, "土"),
-              pickFirst(monsterOptions, "水"),
-              pickFirst(monsterOptions, "其他"),
-            ] as SummonListItem["slots"],
-          },
-        ]
+      : []
 
   return (
     <FriendSummonPage

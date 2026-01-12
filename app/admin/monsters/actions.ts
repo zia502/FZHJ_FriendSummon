@@ -5,9 +5,9 @@ import { unlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { revalidatePath } from "next/cache"
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { requireAdmin, requireSuperAdmin } from "@/lib/admin-auth"
 import {
   addMonster,
   deleteMonster,
@@ -19,26 +19,13 @@ import {
 } from "@/lib/monsters-store"
 
 function isMonsterType(value: string): value is MonsterType {
-  return value === "神" || value === "魔" || value === "属性"
+  return value === "神" || value === "魔" || value === "属性" || value === "其他"
 }
 
 function isMonsterElement(value: string): value is MonsterElement {
   return (
-    value === "火" || value === "风" || value === "土" || value === "水" || value === "其他"
+    value === "火" || value === "风" || value === "土" || value === "水"
   )
-}
-
-async function requireAdmin() {
-  const cookieStore = await cookies()
-  const authed = cookieStore.get("admin_auth")?.value === "1"
-  if (!authed) redirect("/admin")
-  const role = cookieStore.get("admin_role")?.value
-  return role
-}
-
-async function requireSuperAdmin() {
-  const role = await requireAdmin()
-  if (role !== "super") redirect("/admin?error=forbidden")
 }
 
 function safeExtFromFile(file: File): string {

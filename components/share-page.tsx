@@ -13,19 +13,21 @@ import { upsertFriendSummonAction } from "@/app/share/actions"
 type MonsterOption = {
   id: string
   name: string
-  element: "火" | "风" | "土" | "水" | "其他"
-  type: "神" | "魔" | "属性"
+  element: "火" | "风" | "土" | "水" | "光" | "暗" | "未设置"
+  type: "神" | "魔" | "属性" | "其他"
   hasFourStar: boolean
   imageUrl?: string
 }
 
-function slotElement(index: number): MonsterOption["element"] {
+type SlotColumnKey = "火" | "风" | "土" | "水" | "任意"
+
+function slotElement(index: number): SlotColumnKey {
   const col = index % 5
   if (col === 0) return "火"
   if (col === 1) return "风"
   if (col === 2) return "土"
   if (col === 3) return "水"
-  return "其他"
+  return "任意"
 }
 
 function slotRingClass(index: number) {
@@ -63,7 +65,7 @@ function SharePage({
       风: monsters.filter((m) => m.element === "风"),
       土: monsters.filter((m) => m.element === "土"),
       水: monsters.filter((m) => m.element === "水"),
-      其他: monsters,
+      任意: monsters,
     } as const
   }, [monsters])
 
@@ -95,7 +97,7 @@ function SharePage({
         </div>
 
         <div className="text-muted-foreground mt-2 text-sm">
-          不做登录：只要知道玩家 ID 就能编辑该 ID 的友招配置。
+          加载玩家ID可以更新友招配置。
         </div>
 
         {error && (
@@ -177,7 +179,7 @@ function SharePage({
               </div>
             </div>
             <div className="text-muted-foreground text-xs">
-              火/风/土/水栏位只能选同属性魔物；“其他”栏位可选任意魔物。
+              火/风/土/水栏位只能选同属性魔物；“任意”栏位可选任意魔物。
             </div>
           </div>
 
