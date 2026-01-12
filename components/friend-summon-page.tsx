@@ -163,6 +163,18 @@ function FriendSummonPage({
             <Link href={`/?page=${page + 1}`}>下一页</Link>
           </Button>
         </div>
+
+        <div className="text-muted-foreground mt-6 text-center text-xs">
+          如果遇到问题,请{"提交issue"}
+          <a
+            href="https://github.com/zia502/FZHJ_FriendSummon/issues"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            https://github.com/zia502/FZHJ_FriendSummon/issues
+          </a>
+        </div>
       </div>
     </main>
   )

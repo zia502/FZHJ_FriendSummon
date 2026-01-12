@@ -118,31 +118,33 @@ function SharePage({
 
           <div className="grid gap-2">
             <div className="text-sm font-medium">10 个栏位</div>
-            <div className="grid grid-cols-5 gap-2">
-              {slotDefaults.map((defaultValue, index) => {
-                const el = slotElement(index)
-                const options = monstersFor[el]
-                return (
-                  <div key={index} className="grid gap-1">
-                    <select
-                      name={`slot${index}`}
-                      defaultValue={defaultValue}
-                      className={cn(
-                        "border-input bg-background h-9 rounded-md border px-2 text-xs",
-                        "ring-2 ring-inset",
-                        slotRingClass(index)
-                      )}
-                    >
-                      <option value="">{el} · 空</option>
-                      {options.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )
-              })}
+            <div className="overflow-x-auto pb-1">
+              <div className="grid min-w-[420px] grid-cols-5 gap-2">
+                {slotDefaults.map((defaultValue, index) => {
+                  const el = slotElement(index)
+                  const options = monstersFor[el]
+                  return (
+                    <div key={index} className="grid min-w-0 gap-1">
+                      <select
+                        name={`slot${index}`}
+                        defaultValue={defaultValue}
+                        className={cn(
+                          "border-input bg-background h-9 w-full min-w-0 rounded-md border px-2 text-xs",
+                          "ring-2 ring-inset",
+                          slotRingClass(index)
+                        )}
+                      >
+                        <option value="">{el} · 空</option>
+                        {options.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
             <div className="text-muted-foreground text-xs">
               火/风/土/水栏位只能选同属性魔物；“其他”栏位可选任意魔物。

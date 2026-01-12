@@ -108,20 +108,31 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
 
       <div className="mt-1.5 grid grid-cols-5 gap-x-1.5 gap-y-1.5">
         {item.slots.map((slot, index) => {
-          const src = slot?.imageUrl ?? "/summon-placeholder.svg"
+          const hasImage = !!slot?.imageUrl
+          const initial = slot?.name?.trim()?.slice(0, 1) ?? ""
           return (
             <div key={index} className="group relative">
-              <Image
-                src={src}
-                alt={slot?.name ?? "空栏位"}
-                width={64}
-                height={64}
+              <div
                 className={cn(
-                  "block size-16 rounded-md object-cover ring-2 ring-inset",
+                  "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset",
                   ringClassForIndex(index)
                 )}
-                priority={false}
-              />
+              >
+                {hasImage ? (
+                  <Image
+                    src={slot!.imageUrl!}
+                    alt={slot?.name ?? "魔物"}
+                    width={64}
+                    height={64}
+                    className="block size-16 rounded-md object-cover"
+                    priority={false}
+                  />
+                ) : slot ? (
+                  <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">
+                    {initial}
+                  </span>
+                ) : null}
+              </div>
 
               {slot && (
                 <div className="pointer-events-none absolute left-1/2 top-0 z-50 hidden w-64 -translate-x-1/2 -translate-y-[calc(100%+8px)] group-hover:block">

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { adminLogin, adminLogout } from "@/app/admin/actions"
-import { addMonsterAction } from "@/app/admin/monsters/actions"
+import { addMonsterAction, deleteMonsterAction } from "@/app/admin/monsters/actions"
 import { getMonsters, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
 
 export default async function AdminPage({
@@ -17,10 +17,14 @@ export default async function AdminPage({
 }) {
   const cookieStore = await cookies()
   const authed = cookieStore.get("admin_auth")?.value === "1"
+  const role = cookieStore.get("admin_role")?.value
+  const isSuperAdmin = role === "super"
 
   const params = await searchParams
   const hasError = params?.error === "1"
-  const missingEnv = params?.error === "missing_env" || !process.env.ADMIN_PASSWORD
+  const missingEnv =
+    params?.error === "missing_env" ||
+    (!process.env.ADMIN_PASSWORD && !process.env.SUPER_ADMIN_PASSWORD)
   const q = String(params?.q ?? "").trim()
   const type = String(params?.type ?? "").trim()
   const element = String(params?.element ?? "").trim()
@@ -39,7 +43,8 @@ export default async function AdminPage({
               </div>
               {missingEnv && (
                 <div className="text-destructive text-sm">
-                  未配置 `ADMIN_PASSWORD`，请在本地 `.env` 或 `.env.local` 里设置后重启服务。
+                  未配置 `ADMIN_PASSWORD`/`SUPER_ADMIN_PASSWORD`，请在本地 `.env` 或
+                  `.env.local` 里设置后重启服务。
                 </div>
               )}
               <Input
@@ -98,6 +103,10 @@ export default async function AdminPage({
         </form>
       </div>
 
+      <div className="text-muted-foreground mt-2 text-xs">
+        当前权限：{isSuperAdmin ? "超级管理员" : "管理员"}
+      </div>
+
       <Card className="mt-4" id="monsters">
         <CardHeader>
           <CardTitle>魔物管理</CardTitle>
@@ -106,7 +115,6 @@ export default async function AdminPage({
           <form
             action={addMonsterAction}
             className="grid gap-4"
-            encType="multipart/form-data"
           >
             <div className="grid gap-2">
               <div className="text-sm font-medium">魔物名（必填）</div>
@@ -269,6 +277,21 @@ export default async function AdminPage({
                       {monster.hasFourStar && monster.fourStarEffect && (
                         <div className="text-muted-foreground mt-1 line-clamp-2 text-xs">
                           4星：{monster.fourStarEffect}
+                        </div>
+                      )}
+                      {isSuperAdmin && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={`/admin/monsters/${monster.id}`}>
+                              编辑
+                            </Link>
+                          </Button>
+                          <form action={deleteMonsterAction}>
+                            <input type="hidden" name="id" value={monster.id} />
+                            <Button size="sm" variant="destructive" type="submit">
+                              删除
+                            </Button>
+                          </form>
                         </div>
                       )}
                     </div>

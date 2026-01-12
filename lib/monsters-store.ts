@@ -96,6 +96,14 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
 
 async function addMonster(record: MonsterRecord) {
   const db = getDb()
+  const exists = db
+    .prepare(
+      "SELECT 1 FROM monsters WHERE name = ? COLLATE NOCASE LIMIT 1"
+    )
+    .get(record.name) as { 1: number } | undefined
+  if (exists) {
+    throw new Error("已存在同名魔物")
+  }
   const stmt = db.prepare(`
     INSERT INTO monsters (
       id,
@@ -123,5 +131,92 @@ async function addMonster(record: MonsterRecord) {
   )
 }
 
+async function getMonsterById(id: string): Promise<MonsterRecord | null> {
+  const db = getDb()
+  const row = db
+    .prepare(
+      `
+      SELECT
+        id,
+        name,
+        element,
+        type,
+        mainEffect,
+        hasFourStar,
+        fourStarEffect,
+        imageUrl,
+        createdAt
+      FROM monsters
+      WHERE id = ?
+    `
+    )
+    .get(id) as
+    | {
+        id: string
+        name: string
+        element: MonsterElement
+        type: MonsterType
+        mainEffect: string
+        hasFourStar: 0 | 1
+        fourStarEffect: string | null
+        imageUrl: string | null
+        createdAt: string
+      }
+    | undefined
+
+  if (!row) return null
+  return {
+    id: row.id,
+    name: row.name,
+    element: row.element,
+    type: row.type,
+    mainEffect: row.mainEffect,
+    hasFourStar: row.hasFourStar === 1,
+    fourStarEffect: row.fourStarEffect ?? undefined,
+    imageUrl: row.imageUrl ?? undefined,
+    createdAt: row.createdAt,
+  }
+}
+
+async function updateMonster(record: Omit<MonsterRecord, "createdAt">) {
+  const db = getDb()
+  const exists = db
+    .prepare(
+      "SELECT 1 FROM monsters WHERE name = ? COLLATE NOCASE AND id <> ? LIMIT 1"
+    )
+    .get(record.name, record.id) as { 1: number } | undefined
+  if (exists) {
+    throw new Error("已存在同名魔物")
+  }
+
+  db.prepare(
+    `
+    UPDATE monsters SET
+      name = ?,
+      element = ?,
+      type = ?,
+      mainEffect = ?,
+      hasFourStar = ?,
+      fourStarEffect = ?,
+      imageUrl = ?
+    WHERE id = ?
+  `
+  ).run(
+    record.name,
+    record.element,
+    record.type,
+    record.mainEffect,
+    record.hasFourStar ? 1 : 0,
+    record.fourStarEffect ?? null,
+    record.imageUrl ?? null,
+    record.id
+  )
+}
+
+async function deleteMonster(id: string) {
+  const db = getDb()
+  db.prepare("DELETE FROM monsters WHERE id = ?").run(id)
+}
+
 export type { GetMonstersParams, MonsterElement, MonsterRecord, MonsterType }
-export { addMonster, getMonsters }
+export { addMonster, deleteMonster, getMonsterById, getMonsters, updateMonster }

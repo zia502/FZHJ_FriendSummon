@@ -50,6 +50,14 @@ function getDb() {
     CREATE INDEX IF NOT EXISTS idx_friend_summons_updatedAt ON friend_summons(updatedAt DESC);
   `)
 
+  try {
+    db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS uniq_monsters_name ON monsters(name COLLATE NOCASE)"
+    )
+  } catch {
+    // If existing DB already has duplicate names, keep app-level checks as the source of truth.
+  }
+
   // Lightweight migration for existing DBs created before `element` existed.
   const columns = db
     .prepare("PRAGMA table_info(monsters)")
