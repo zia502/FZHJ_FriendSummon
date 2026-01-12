@@ -141,7 +141,7 @@ export default async function AdminPage({
             </div>
 
             <div className="grid gap-2">
-              <div className="text-sm font-medium">类型（必选）</div>
+              <div className="text-sm font-medium">主招效果类型（必选）</div>
               <div className="flex items-center gap-4">
                 {typeOptions.map((t) => (
                   <label key={t} className="flex items-center gap-2 text-sm">
@@ -278,7 +278,6 @@ export default async function AdminPage({
             </div>
 
             <div className="text-muted-foreground mt-3 text-xs">
-              提示：图片文件会写入 `public/uploads/monsters/`；数据写入 `data/monsters.json`。
               <span className="ml-2">
                 <Link href="#monsters" className="underline underline-offset-2">
                   回到顶部

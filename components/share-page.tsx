@@ -154,12 +154,7 @@ function SharePage({
           </Button>
         </form>
 
-        <div className="mt-6 border-t pt-4">
-          <div className="text-muted-foreground text-xs">
-            提示：想编辑已有配置，可以访问{" "}
-            <span className="font-mono">/share?id=玩家ID</span> 直接加载。
-          </div>
-        </div>
+        <div className="mt-6 border-t pt-4" />
 
         <div className="mt-3 grid grid-cols-5 gap-2">
           {Array.from({ length: 10 }, (_, i) => i).map((index) => (
