@@ -99,7 +99,7 @@ function FriendSummonPage({
               >
                 <summary className="text-foreground flex cursor-pointer list-none items-center justify-between px-2 py-2 text-sm">
                   <span>
-                    {el}列
+                    {el}属性
                     {filters[el].length > 0 ? `（${filters[el].length}）` : "（全部）"}
                   </span>
                   <span className="text-muted-foreground text-xs">展开</span>
