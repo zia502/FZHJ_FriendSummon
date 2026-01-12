@@ -140,6 +140,7 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
                     height={64}
                     className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
                     priority={false}
+                    unoptimized={slot!.imageUrl!.startsWith("/uploads/")}
                   />
                 ) : slot ? (
                   <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">

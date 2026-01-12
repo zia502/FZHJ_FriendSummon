@@ -1,7 +1,7 @@
 "use server"
 
 import { randomUUID } from "node:crypto"
-import { unlink, writeFile } from "node:fs/promises"
+import { mkdir, unlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { revalidatePath } from "next/cache"
@@ -79,12 +79,13 @@ async function addMonsterAction(formData: FormData) {
     const filename = `${id}.${ext}`
     const uploadPath = path.join(
       process.cwd(),
-      "public",
+      "data",
       "uploads",
       "monsters",
       filename
     )
     const bytes = Buffer.from(await image.arrayBuffer())
+    await mkdir(path.dirname(uploadPath), { recursive: true })
     await writeFile(uploadPath, bytes)
     imageUrl = `/uploads/monsters/${filename}`
   }
@@ -137,12 +138,13 @@ async function updateMonsterAction(formData: FormData) {
     const filename = `${id}.${ext}`
     const uploadPath = path.join(
       process.cwd(),
-      "public",
+      "data",
       "uploads",
       "monsters",
       filename
     )
     const bytes = Buffer.from(await image.arrayBuffer())
+    await mkdir(path.dirname(uploadPath), { recursive: true })
     await writeFile(uploadPath, bytes)
     imageUrl = `/uploads/monsters/${filename}`
   }
@@ -177,18 +179,19 @@ async function deleteMonsterAction(formData: FormData) {
 
   if (existing?.imageUrl?.startsWith("/uploads/monsters/")) {
     const filename = existing.imageUrl.replace("/uploads/monsters/", "")
-    const filePath = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "monsters",
-      filename
+    const candidates = [
+      path.join(process.cwd(), "data", "uploads", "monsters", filename),
+      path.join(process.cwd(), "public", "uploads", "monsters", filename),
+    ]
+    await Promise.all(
+      candidates.map(async (filePath) => {
+        try {
+          await unlink(filePath)
+        } catch {
+          // ignore
+        }
+      })
     )
-    try {
-      await unlink(filePath)
-    } catch {
-      // ignore
-    }
   }
 
   await deleteMonster(id)

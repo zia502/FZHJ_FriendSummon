@@ -286,6 +286,7 @@ export default async function AdminPage({
                         width={48}
                         height={48}
                         className="size-12 object-cover"
+                        unoptimized={(withVersion(monster.imageUrl, monster.updatedAt) ?? "").startsWith("/uploads/")}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
