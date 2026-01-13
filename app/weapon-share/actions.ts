@@ -14,6 +14,8 @@ type CreateWeaponBoardState = {
   fieldErrors?: Partial<
     Record<
       | "name"
+      | "element"
+      | "type"
       | "playerId"
       | "boardImage"
       | "predictionImage"
@@ -26,6 +28,14 @@ type CreateWeaponBoardState = {
 }
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+
+function isWeaponBoardElement(value: string) {
+  return value === "火" || value === "风" || value === "土" || value === "水"
+}
+
+function isWeaponBoardType(value: string) {
+  return value === "神" || value === "魔" || value === "其他"
+}
 
 function safeExtFromFile(file: File): string | null {
   const name = file.name.toLowerCase()
@@ -76,6 +86,8 @@ async function createWeaponBoardAction(
   formData: FormData
 ): Promise<CreateWeaponBoardState> {
   const name = String(formData.get("name") ?? "").trim()
+  const elementRaw = String(formData.get("element") ?? "").trim()
+  const typeRaw = String(formData.get("type") ?? "").trim()
   const description = String(formData.get("description") ?? "").trim()
   const playerIdRaw = String(formData.get("playerId") ?? "").trim()
 
@@ -83,6 +95,14 @@ async function createWeaponBoardAction(
 
   if (!name) {
     fieldErrors.name = "请填写武器盘名"
+  }
+
+  if (!isWeaponBoardElement(elementRaw)) {
+    fieldErrors.element = "请选择属性（火/风/土/水）"
+  }
+
+  if (!isWeaponBoardType(typeRaw)) {
+    fieldErrors.type = "请选择类型（神/魔/其他）"
   }
 
   let playerId: string | undefined
@@ -164,6 +184,8 @@ async function createWeaponBoardAction(
     await createWeaponBoard({
       id,
       name,
+      element: elementRaw as "火" | "风" | "土" | "水",
+      type: typeRaw as "神" | "魔" | "其他",
       description: description ? description : undefined,
       playerId,
       boardImageUrl,

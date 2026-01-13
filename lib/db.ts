@@ -192,6 +192,8 @@ function ensureSchema(database: Database.Database) {
     CREATE TABLE IF NOT EXISTS weapon_boards (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      element TEXT,
+      type TEXT,
       description TEXT,
       playerId TEXT,
       boardImageUrl TEXT NOT NULL,
@@ -205,6 +207,8 @@ function ensureSchema(database: Database.Database) {
 
     CREATE INDEX IF NOT EXISTS idx_weapon_boards_updatedAt ON weapon_boards(updatedAt DESC);
     CREATE INDEX IF NOT EXISTS idx_weapon_boards_likes ON weapon_boards(likes DESC);
+    CREATE INDEX IF NOT EXISTS idx_weapon_boards_element ON weapon_boards(element);
+    CREATE INDEX IF NOT EXISTS idx_weapon_boards_type ON weapon_boards(type);
 
     CREATE TABLE IF NOT EXISTS weapon_board_likes (
       boardId TEXT NOT NULL,
@@ -215,6 +219,18 @@ function ensureSchema(database: Database.Database) {
 
     CREATE INDEX IF NOT EXISTS idx_weapon_board_likes_boardId ON weapon_board_likes(boardId);
   `)
+
+  const weaponBoardColumns = database
+    .prepare("PRAGMA table_info(weapon_boards)")
+    .all() as Array<{ name: string }>
+  if (!weaponBoardColumns.some((c) => c.name === "element")) {
+    database.exec("ALTER TABLE weapon_boards ADD COLUMN element TEXT")
+    database.exec("CREATE INDEX IF NOT EXISTS idx_weapon_boards_element ON weapon_boards(element)")
+  }
+  if (!weaponBoardColumns.some((c) => c.name === "type")) {
+    database.exec("ALTER TABLE weapon_boards ADD COLUMN type TEXT")
+    database.exec("CREATE INDEX IF NOT EXISTS idx_weapon_boards_type ON weapon_boards(type)")
+  }
 
   const friendSummonColumns = database
     .prepare("PRAGMA table_info(friend_summons)")

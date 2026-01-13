@@ -5,6 +5,8 @@ import { getDb } from "@/lib/db"
 type WeaponBoardRecord = {
   id: string
   name: string
+  element?: WeaponBoardElement
+  type?: WeaponBoardType
   description?: string
   playerId?: string
   boardImageUrl: string
@@ -17,6 +19,8 @@ type WeaponBoardRecord = {
 }
 
 type WeaponBoardSortMode = "time" | "likes"
+type WeaponBoardElement = "火" | "风" | "土" | "水"
+type WeaponBoardType = "神" | "魔" | "其他"
 
 type GetWeaponBoardsPageResult = {
   items: WeaponBoardRecord[]
@@ -29,6 +33,8 @@ type GetWeaponBoardsPageResult = {
 type WeaponBoardRow = {
   id: string
   name: string
+  element: string | null
+  type: string | null
   description: string | null
   playerId: string | null
   boardImageUrl: string
@@ -46,14 +52,28 @@ function normalizePage(raw: unknown) {
   return Math.floor(value)
 }
 
+function isWeaponBoardElement(value: string): value is WeaponBoardElement {
+  return value === "火" || value === "风" || value === "土" || value === "水"
+}
+
+function isWeaponBoardType(value: string): value is WeaponBoardType {
+  return value === "神" || value === "魔" || value === "其他"
+}
+
 async function getWeaponBoardsPage({
   page,
   pageSize,
   sort = "time",
+  q,
+  element = "全部",
+  type = "全部",
 }: {
   page: number
   pageSize: number
   sort?: WeaponBoardSortMode
+  q?: string
+  element?: WeaponBoardElement | "全部"
+  type?: WeaponBoardType | "全部"
 }): Promise<GetWeaponBoardsPageResult> {
   const db = getDb()
   const safePage = normalizePage(page)
@@ -62,12 +82,35 @@ async function getWeaponBoardsPage({
   const orderBy =
     sort === "likes" ? "likes DESC, updatedAt DESC" : "updatedAt DESC"
 
+  const where: string[] = []
+  const values: Array<string | number> = []
+
+  const qText = (q ?? "").trim()
+  if (qText) {
+    where.push("name LIKE ?")
+    values.push(`%${qText}%`)
+  }
+
+  if (element !== "全部") {
+    where.push("element = ?")
+    values.push(element)
+  }
+
+  if (type !== "全部") {
+    where.push("type = ?")
+    values.push(type)
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : ""
+
   const rows = db
     .prepare(
       `
       SELECT
         id,
         name,
+        element,
+        type,
         description,
         playerId,
         boardImageUrl,
@@ -78,29 +121,36 @@ async function getWeaponBoardsPage({
         createdAt,
         updatedAt
       FROM weapon_boards
+      ${whereSql}
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `
     )
-    .all(pageSize + 1, offset) as WeaponBoardRow[]
+    .all(...values, pageSize + 1, offset) as WeaponBoardRow[]
 
   const sliced = rows.slice(0, pageSize)
   const hasNext = rows.length > pageSize
   const hasPrev = safePage > 1
 
-  const items: WeaponBoardRecord[] = sliced.map((row) => ({
-    id: String(row.id),
-    name: String(row.name),
-    description: row.description ?? undefined,
-    playerId: row.playerId ?? undefined,
-    boardImageUrl: String(row.boardImageUrl),
-    predictionImageUrl: row.predictionImageUrl ?? undefined,
-    teamImageUrl0: row.teamImageUrl0 ?? undefined,
-    teamImageUrl1: row.teamImageUrl1 ?? undefined,
-    likes: Number(row.likes ?? 0) || 0,
-    createdAt: String(row.createdAt),
-    updatedAt: String(row.updatedAt),
-  }))
+  const items: WeaponBoardRecord[] = sliced.map((row) => {
+    const elementText = String(row.element ?? "")
+    const typeText = String(row.type ?? "")
+    return {
+      id: String(row.id),
+      name: String(row.name),
+      element: isWeaponBoardElement(elementText) ? elementText : undefined,
+      type: isWeaponBoardType(typeText) ? typeText : undefined,
+      description: row.description ?? undefined,
+      playerId: row.playerId ?? undefined,
+      boardImageUrl: String(row.boardImageUrl),
+      predictionImageUrl: row.predictionImageUrl ?? undefined,
+      teamImageUrl0: row.teamImageUrl0 ?? undefined,
+      teamImageUrl1: row.teamImageUrl1 ?? undefined,
+      likes: Number(row.likes ?? 0) || 0,
+      createdAt: String(row.createdAt),
+      updatedAt: String(row.updatedAt),
+    }
+  })
 
   return { items, hasPrev, hasNext, page: safePage, pageSize }
 }
@@ -113,6 +163,8 @@ async function getWeaponBoardById(id: string): Promise<WeaponBoardRecord | null>
       SELECT
         id,
         name,
+        element,
+        type,
         description,
         playerId,
         boardImageUrl,
@@ -130,9 +182,14 @@ async function getWeaponBoardById(id: string): Promise<WeaponBoardRecord | null>
 
   if (!row) return null
 
+  const elementText = String(row.element ?? "")
+  const typeText = String(row.type ?? "")
+
   return {
     id: String(row.id),
     name: String(row.name),
+    element: isWeaponBoardElement(elementText) ? elementText : undefined,
+    type: isWeaponBoardType(typeText) ? typeText : undefined,
     description: row.description ?? undefined,
     playerId: row.playerId ?? undefined,
     boardImageUrl: String(row.boardImageUrl),
@@ -152,6 +209,8 @@ async function createWeaponBoard(record: WeaponBoardRecord) {
     INSERT INTO weapon_boards (
       id,
       name,
+      element,
+      type,
       description,
       playerId,
       boardImageUrl,
@@ -161,11 +220,13 @@ async function createWeaponBoard(record: WeaponBoardRecord) {
       likes,
       createdAt,
       updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `
   ).run(
     record.id,
     record.name,
+    record.element ?? null,
+    record.type ?? null,
     record.description ?? null,
     record.playerId ?? null,
     record.boardImageUrl,
@@ -212,6 +273,11 @@ async function likeWeaponBoard({
   return tx()
 }
 
-export type { GetWeaponBoardsPageResult, WeaponBoardRecord, WeaponBoardSortMode }
+export type {
+  GetWeaponBoardsPageResult,
+  WeaponBoardElement,
+  WeaponBoardRecord,
+  WeaponBoardSortMode,
+  WeaponBoardType,
+}
 export { createWeaponBoard, getWeaponBoardById, getWeaponBoardsPage, likeWeaponBoard }
-

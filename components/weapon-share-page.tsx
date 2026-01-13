@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea"
 type SortMode = "time" | "likes"
 type CreateWeaponBoardState = Awaited<ReturnType<typeof createWeaponBoardAction>>
 const INITIAL_STATE: CreateWeaponBoardState = { ok: false }
+type FilterElement = "全部" | "火" | "风" | "土" | "水"
+type FilterType = "全部" | "神" | "魔" | "其他"
 
 function WeaponSharePage({
   initialItems,
@@ -21,6 +23,9 @@ function WeaponSharePage({
   hasNext,
   sort,
   saved,
+  q,
+  element,
+  type,
 }: {
   initialItems: WeaponBoardListItem[]
   page: number
@@ -28,6 +33,9 @@ function WeaponSharePage({
   hasNext: boolean
   sort: SortMode
   saved: boolean
+  q: string
+  element: FilterElement
+  type: FilterType
 }) {
   const router = useRouter()
   const formRef = React.useRef<HTMLFormElement | null>(null)
@@ -39,17 +47,31 @@ function WeaponSharePage({
   >(createWeaponBoardAction, INITIAL_STATE)
 
   const linkFor = React.useCallback(
-    (next: { page?: number; sort?: SortMode; saved?: boolean }) => {
+    (next: {
+      page?: number
+      sort?: SortMode
+      saved?: boolean
+      q?: string
+      element?: FilterElement
+      type?: FilterType
+    }) => {
       const nextPage = next.page ?? page
       const nextSort = next.sort ?? sort
       const nextSaved = next.saved ?? false
+      const nextQ = next.q ?? q
+      const nextElement = next.element ?? element
+      const nextType = next.type ?? type
+
       const query = new URLSearchParams()
       query.set("page", String(nextPage))
       if (nextSort !== "time") query.set("sort", nextSort)
       if (nextSaved) query.set("saved", "1")
+      if (nextQ) query.set("q", nextQ)
+      if (nextElement !== "全部") query.set("element", nextElement)
+      if (nextType !== "全部") query.set("type", nextType)
       return `/weapon-share?${query.toString()}`
     },
-    [page, sort]
+    [element, page, q, sort, type]
   )
 
   React.useEffect(() => {
@@ -123,6 +145,47 @@ function WeaponSharePage({
                 />
                 {fieldError.name && (
                   <div className="text-destructive text-xs">{fieldError.name}</div>
+                )}
+              </div>
+
+              <div className="grid gap-1.5">
+                <div className="text-sm font-medium">属性（必填）</div>
+                <select
+                  name="element"
+                  defaultValue=""
+                  aria-invalid={!!fieldError.element}
+                  className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
+                >
+                  <option value="" disabled>
+                    请选择（火/风/土/水）
+                  </option>
+                  <option value="火">火</option>
+                  <option value="风">风</option>
+                  <option value="土">土</option>
+                  <option value="水">水</option>
+                </select>
+                {fieldError.element && (
+                  <div className="text-destructive text-xs">{fieldError.element}</div>
+                )}
+              </div>
+
+              <div className="grid gap-1.5">
+                <div className="text-sm font-medium">类型（必填）</div>
+                <select
+                  name="type"
+                  defaultValue=""
+                  aria-invalid={!!fieldError.type}
+                  className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
+                >
+                  <option value="" disabled>
+                    请选择（神/魔/其他）
+                  </option>
+                  <option value="神">神</option>
+                  <option value="魔">魔</option>
+                  <option value="其他">其他</option>
+                </select>
+                {fieldError.type && (
+                  <div className="text-destructive text-xs">{fieldError.type}</div>
                 )}
               </div>
 
@@ -238,11 +301,55 @@ function WeaponSharePage({
           </div>
         </div>
 
+        <form
+          method="get"
+          action="/weapon-share"
+          className="mt-3 grid gap-2 rounded-xl border p-3"
+        >
+          <div className="text-sm font-medium">搜索/过滤</div>
+          <div className="grid gap-2">
+            <Input name="q" placeholder="搜索武器盘名" defaultValue={q} />
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                name="element"
+                defaultValue={element}
+                className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
+              >
+                <option value="全部">属性：全部</option>
+                <option value="火">属性：火</option>
+                <option value="风">属性：风</option>
+                <option value="土">属性：土</option>
+                <option value="水">属性：水</option>
+              </select>
+              <select
+                name="type"
+                defaultValue={type}
+                className="border-input bg-background h-9 w-full rounded-md border px-2 text-sm"
+              >
+                <option value="全部">类型：全部</option>
+                <option value="神">类型：神</option>
+                <option value="魔">类型：魔</option>
+                <option value="其他">类型：其他</option>
+              </select>
+            </div>
+            <input type="hidden" name="sort" value={sort} />
+            <input type="hidden" name="page" value="1" />
+            <div className="flex items-center justify-between gap-2">
+              <Button type="submit" size="sm">
+                应用
+              </Button>
+              <Button asChild type="button" size="sm" variant="outline">
+                <Link href="/weapon-share">清空</Link>
+              </Button>
+            </div>
+          </div>
+        </form>
+
         <div className="mt-3 grid gap-2">
           {initialItems.length > 0 ? (
             initialItems.map((item) => <WeaponBoardCard key={item.id} item={item} />)
           ) : (
-            <div className="text-muted-foreground text-sm">暂无分享</div>
+            <div className="text-muted-foreground text-sm">暂无结果</div>
           )}
         </div>
 
