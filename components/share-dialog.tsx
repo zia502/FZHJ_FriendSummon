@@ -79,7 +79,13 @@ function ShareDialog({
     ) as SummonListItem["slots"]
 
     const now = new Date().toISOString()
-    onShare({ playerId: numericId, slots: resolvedSlots, createdAt: now, updatedAt: now })
+    onShare({
+      playerId: numericId,
+      slots: resolvedSlots,
+      createdAt: now,
+      updatedAt: now,
+      likes: 0,
+    })
   }, [idValid, monstersById, numericId, onShare, slots])
 
   return (

@@ -41,11 +41,21 @@ function ensureSchema(database: Database.Database) {
       slot7 TEXT,
       slot8 TEXT,
       slot9 TEXT,
+      likes INTEGER NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_friend_summons_updatedAt ON friend_summons(updatedAt DESC);
+
+    CREATE TABLE IF NOT EXISTS friend_summon_likes (
+      playerId TEXT NOT NULL,
+      voterId TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      PRIMARY KEY (playerId, voterId)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_friend_summon_likes_playerId ON friend_summon_likes(playerId);
   `)
 
   try {
@@ -57,10 +67,10 @@ function ensureSchema(database: Database.Database) {
   }
 
   // Lightweight migrations for existing DBs.
-  const columns = database
+  const monsterColumns = database
     .prepare("PRAGMA table_info(monsters)")
     .all() as Array<{ name: string }>
-  if (!columns.some((c) => c.name === "element")) {
+  if (!monsterColumns.some((c) => c.name === "element")) {
     database.exec(
       "ALTER TABLE monsters ADD COLUMN element TEXT NOT NULL DEFAULT '未设置'"
     )
@@ -69,14 +79,14 @@ function ensureSchema(database: Database.Database) {
     )
   }
 
-  if (!columns.some((c) => c.name === "updatedAt")) {
+  if (!monsterColumns.some((c) => c.name === "updatedAt")) {
     database.exec("ALTER TABLE monsters ADD COLUMN updatedAt TEXT")
     database.exec(
       "UPDATE monsters SET updatedAt = createdAt WHERE updatedAt IS NULL OR updatedAt = ''"
     )
   }
 
-  if (!columns.some((c) => c.name === "note")) {
+  if (!monsterColumns.some((c) => c.name === "note")) {
     database.exec("ALTER TABLE monsters ADD COLUMN note TEXT")
   }
 
@@ -177,6 +187,29 @@ function ensureSchema(database: Database.Database) {
   database.exec(
     "CREATE INDEX IF NOT EXISTS idx_monsters_updatedAt ON monsters(updatedAt DESC)"
   )
+
+  const friendSummonColumns = database
+    .prepare("PRAGMA table_info(friend_summons)")
+    .all() as Array<{ name: string }>
+  if (!friendSummonColumns.some((c) => c.name === "likes")) {
+    database.exec("ALTER TABLE friend_summons ADD COLUMN likes INTEGER NOT NULL DEFAULT 0")
+  }
+  if (friendSummonColumns.some((c) => c.name === "likes")) {
+    database.exec(
+      "CREATE INDEX IF NOT EXISTS idx_friend_summons_likes ON friend_summons(likes DESC)"
+    )
+  }
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS friend_summon_likes (
+      playerId TEXT NOT NULL,
+      voterId TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      PRIMARY KEY (playerId, voterId)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_friend_summon_likes_playerId ON friend_summon_likes(playerId);
+  `)
 
   schemaEnsured = true
 }

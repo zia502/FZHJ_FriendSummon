@@ -10,7 +10,7 @@ import { adminLogin, adminLogout } from "@/app/admin/actions"
 import { deleteFriendSummonAction } from "@/app/admin/friend-summons/actions"
 import { addMonsterAction, deleteMonsterAction } from "@/app/admin/monsters/actions"
 import { getFriendSummonByPlayerId } from "@/lib/friend-summons-store"
-import { getMonsters, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
+import { getMonstersPage, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
 
 function withVersion(url: string | undefined, version: string | undefined) {
   if (!url) return undefined
@@ -43,6 +43,8 @@ export default async function AdminPage({
   const q = String(params?.q ?? "").trim()
   const type = String(params?.type ?? "").trim()
   const element = String(params?.element ?? "").trim()
+  const mPageRaw = String(params?.m_page ?? "").trim()
+  const mPage = Math.max(1, Number(mPageRaw || 1) || 1)
 
   const fsPlayerId = String(params?.fs_playerId ?? "").trim()
   const fsError = String(params?.fs_error ?? "").trim()
@@ -111,15 +113,30 @@ export default async function AdminPage({
     ? element
     : "全部") as MonsterElement | "全部"
 
-  const filtered = await getMonsters({
+  const {
+    items: filtered,
+    hasPrev: mHasPrev,
+    hasNext: mHasNext,
+    page: mPageSafe,
+  } = await getMonstersPage({
     q,
     type: typeParam,
     element: elementParam,
-    limit: 5,
+    page: mPage,
+    pageSize: 5,
   })
 
   const typeOptions: Array<MonsterType> = ["神", "魔", "属性", "其他"]
   const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水"]
+
+  const monstersHref = (page: number) => {
+    const query = new URLSearchParams()
+    if (q) query.set("q", q)
+    if (type) query.set("type", type)
+    if (element) query.set("element", element)
+    query.set("m_page", String(page))
+    return `/admin?${query.toString()}#monsters`
+  }
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-6 sm:px-6">
@@ -234,7 +251,10 @@ export default async function AdminPage({
           <div className="mt-6 border-t pt-4">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold">最新添加的 5 个魔物</div>
+                <div className="text-sm font-semibold">
+                  {q || type || element ? "搜索结果" : "最新添加的 5 个魔物"}
+                  {mPageSafe > 1 ? `（第 ${mPageSafe} 页）` : ""}
+                </div>
                 <div className="text-muted-foreground mt-1 text-xs">
                   支持按 名字/效果/类型 搜索
                 </div>
@@ -242,6 +262,7 @@ export default async function AdminPage({
             </div>
 
             <form className="mt-3 grid gap-2" action="/admin" method="get">
+              <input type="hidden" name="m_page" value="1" />
               <div className="flex items-center gap-2">
                 <Input
                   name="q"
@@ -347,6 +368,18 @@ export default async function AdminPage({
                   </div>
                 ))
               )}
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <Button asChild variant="outline" size="sm" disabled={!mHasPrev}>
+                <Link href={monstersHref(Math.max(1, mPageSafe - 1))}>上一页</Link>
+              </Button>
+              <div className="text-muted-foreground text-xs">
+                第 {mPageSafe} 页
+              </div>
+              <Button asChild variant="outline" size="sm" disabled={!mHasNext}>
+                <Link href={monstersHref(mPageSafe + 1)}>下一页</Link>
+              </Button>
             </div>
 
             <div className="text-muted-foreground mt-3 text-xs">

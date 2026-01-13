@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { CopyIcon } from "lucide-react"
+import { CopyIcon, ThumbsUp } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -49,6 +49,7 @@ type SummonListItem = {
   playerId: string
   createdAt: string
   updatedAt: string
+  likes: number
   slots: [
     MonsterSlot | null,
     MonsterSlot | null,
@@ -77,9 +78,54 @@ type MonsterSlot = {
 }
 
 function SummonCard({ item, className }: { item: SummonListItem; className?: string }) {
+  const [likes, setLikes] = React.useState(item.likes ?? 0)
+  const [liked, setLiked] = React.useState(false)
+
+  React.useEffect(() => {
+    setLikes(item.likes ?? 0)
+  }, [item.likes])
+
+  React.useEffect(() => {
+    try {
+      const key = `fzhj_friendsummon:liked:${item.playerId}`
+      setLiked(localStorage.getItem(key) === "1")
+    } catch {
+      setLiked(false)
+    }
+  }, [item.playerId])
+
   const handleCopy = React.useCallback(() => {
     void copyToClipboard(item.playerId)
   }, [item.playerId])
+
+  const handleLike = React.useCallback(async () => {
+    if (liked) return
+
+    setLiked(true)
+
+    try {
+      const res = await fetch("/api/friend-summons/like", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ playerId: item.playerId }),
+      })
+      if (!res.ok) throw new Error(String(res.status))
+      const data = (await res.json()) as { likes?: number; didLike?: boolean }
+      if (typeof data.likes === "number") setLikes(data.likes)
+      if (data.didLike === false) {
+        setLiked(true)
+      }
+
+      try {
+        const key = `fzhj_friendsummon:liked:${item.playerId}`
+        localStorage.setItem(key, "1")
+      } catch {
+        // ignore
+      }
+    } catch {
+      setLiked(false)
+    }
+  }, [item.playerId, liked])
 
   const ringClassForIndex = React.useCallback((index: number) => {
     const col = index % 5
@@ -104,10 +150,26 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
       className={cn(
         "ring-foreground/10 bg-card text-card-foreground rounded-xl ring-1",
         "px-3 py-2.5",
+        "relative",
         className
       )}
     >
-      <div className="flex items-center justify-start gap-0">
+      <div className="absolute right-2 top-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1 px-2"
+          aria-label={liked ? "已点赞" : "点赞"}
+          onClick={handleLike}
+          disabled={liked}
+        >
+          <ThumbsUp className={cn("size-4", liked && "text-primary")} />
+          <span className="text-xs tabular-nums">{likes}</span>
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-start gap-0 pr-12">
         <div className="truncate text-sm font-bold tracking-tight">
           {item.playerId}
         </div>

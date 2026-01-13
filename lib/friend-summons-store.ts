@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db"
 type FriendSummonRecord = {
   playerId: string
   slotIds: Array<string | null>
+  likes: number
   createdAt: string
   updatedAt: string
 }
@@ -17,6 +18,25 @@ type GetFriendSummonsPageResult = {
   pageSize: number
 }
 
+type FriendSummonSortMode = "time" | "likes"
+
+type FriendSummonRow = {
+  playerId: string
+  slot0: string | null
+  slot1: string | null
+  slot2: string | null
+  slot3: string | null
+  slot4: string | null
+  slot5: string | null
+  slot6: string | null
+  slot7: string | null
+  slot8: string | null
+  slot9: string | null
+  likes: number
+  createdAt: string
+  updatedAt: string
+}
+
 function normalizePage(raw: unknown) {
   const value = Number(raw)
   if (!Number.isFinite(value) || value < 1) return 1
@@ -26,13 +46,18 @@ function normalizePage(raw: unknown) {
 async function getFriendSummonsPage({
   page,
   pageSize,
+  sort = "time",
 }: {
   page: number
   pageSize: number
+  sort?: FriendSummonSortMode
 }): Promise<GetFriendSummonsPageResult> {
   const db = getDb()
   const safePage = normalizePage(page)
   const offset = (safePage - 1) * pageSize
+
+  const orderBy =
+    sort === "likes" ? "likes DESC, updatedAt DESC" : "updatedAt DESC"
 
   const rows = db
     .prepare(
@@ -41,14 +66,15 @@ async function getFriendSummonsPage({
         playerId,
         slot0, slot1, slot2, slot3, slot4,
         slot5, slot6, slot7, slot8, slot9,
+        likes,
         createdAt,
         updatedAt
       FROM friend_summons
-      ORDER BY updatedAt DESC
+      ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `
     )
-    .all(pageSize + 1, offset) as Array<Record<string, string | null>>
+    .all(pageSize + 1, offset) as FriendSummonRow[]
 
   const sliced = rows.slice(0, pageSize)
   const hasNext = rows.length > pageSize
@@ -68,6 +94,7 @@ async function getFriendSummonsPage({
       row.slot8 ?? null,
       row.slot9 ?? null,
     ],
+    likes: Number(row.likes ?? 0) || 0,
     createdAt: String(row.createdAt),
     updatedAt: String(row.updatedAt),
   }))
@@ -84,13 +111,14 @@ async function getFriendSummonByPlayerId(playerId: string): Promise<FriendSummon
         playerId,
         slot0, slot1, slot2, slot3, slot4,
         slot5, slot6, slot7, slot8, slot9,
+        likes,
         createdAt,
         updatedAt
       FROM friend_summons
       WHERE playerId = ?
     `
     )
-    .get(playerId) as Record<string, string | null> | undefined
+    .get(playerId) as FriendSummonRow | undefined
 
   if (!row) return null
 
@@ -108,6 +136,7 @@ async function getFriendSummonByPlayerId(playerId: string): Promise<FriendSummon
       row.slot8 ?? null,
       row.slot9 ?? null,
     ],
+    likes: Number(row.likes ?? 0) || 0,
     createdAt: String(row.createdAt),
     updatedAt: String(row.updatedAt),
   }
@@ -172,11 +201,48 @@ async function upsertFriendSummon({
   )
 }
 
+async function likeFriendSummon({
+  playerId,
+  voterId,
+}: {
+  playerId: string
+  voterId: string
+}): Promise<{ likes: number; didLike: boolean } | null> {
+  const db = getDb()
+
+  const ensureExists = db.prepare(
+    "SELECT 1 as ok FROM friend_summons WHERE playerId = ?"
+  )
+  const insertLike = db.prepare(
+    "INSERT OR IGNORE INTO friend_summon_likes (playerId, voterId, createdAt) VALUES (?, ?, ?)"
+  )
+  const bump = db.prepare("UPDATE friend_summons SET likes = likes + 1 WHERE playerId = ?")
+  const read = db.prepare("SELECT likes FROM friend_summons WHERE playerId = ?")
+
+  const tx = db.transaction(() => {
+    const exists = ensureExists.get(playerId) as { ok?: 1 } | undefined
+    if (!exists) return null
+
+    const now = new Date().toISOString()
+    const insert = insertLike.run(playerId, voterId, now) as unknown as {
+      changes: number
+    }
+    const didLike = insert.changes > 0
+    if (didLike) bump.run(playerId)
+
+    const row = read.get(playerId) as { likes?: number } | undefined
+    return { likes: Number(row?.likes ?? 0) || 0, didLike }
+  })
+
+  return tx()
+}
+
 export type { FriendSummonRecord, GetFriendSummonsPageResult }
 export {
   deleteFriendSummonByPlayerId,
   getFriendSummonByPlayerId,
   getFriendSummonsPage,
+  likeFriendSummon,
   upsertFriendSummon,
 }
 

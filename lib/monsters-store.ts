@@ -27,6 +27,20 @@ type GetMonstersParams = {
   limit?: number
 }
 
+type GetMonstersPageResult = {
+  items: MonsterRecord[]
+  hasPrev: boolean
+  hasNext: boolean
+  page: number
+  pageSize: number
+}
+
+function normalizePage(raw: unknown) {
+  const value = Number(raw)
+  if (!Number.isFinite(value) || value < 1) return 1
+  return Math.floor(value)
+}
+
 function isMonsterElement(value: string): value is MonsterElement {
   return (
     value === "火" ||
@@ -128,6 +142,101 @@ async function getMonsters(params: GetMonstersParams = {}): Promise<MonsterRecor
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }))
+}
+
+async function getMonstersPage({
+  page,
+  pageSize,
+  q,
+  type = "全部",
+  element = "全部",
+}: {
+  page: number
+  pageSize: number
+} & Omit<GetMonstersParams, "limit">): Promise<GetMonstersPageResult> {
+  const db = getDb()
+
+  const safePage = normalizePage(page)
+  const offset = (safePage - 1) * pageSize
+
+  const where: string[] = []
+  const values: Array<string | number> = []
+
+  const qText = (q ?? "").trim()
+
+  if (type !== "全部") {
+    where.push("type = ?")
+    values.push(type)
+  }
+
+  if (element !== "全部") {
+    where.push("element = ?")
+    values.push(element)
+  }
+
+  if (qText) {
+    where.push(
+      "(name LIKE ? OR mainEffect LIKE ? OR COALESCE(fourStarEffect,'') LIKE ? OR COALESCE(note,'') LIKE ?)"
+    )
+    const like = `%${qText}%`
+    values.push(like, like, like, like)
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : ""
+  const rows = db
+    .prepare(
+      `
+      SELECT
+        id,
+        name,
+        element,
+        type,
+        mainEffect,
+        note,
+        hasFourStar,
+        fourStarEffect,
+        imageUrl,
+        createdAt,
+        COALESCE(updatedAt, createdAt) AS updatedAt
+      FROM monsters
+      ${whereSql}
+      ORDER BY createdAt DESC
+      LIMIT ? OFFSET ?
+    `
+    )
+    .all(...values, pageSize + 1, offset) as Array<{
+      id: string
+      name: string
+      element: string
+      type: MonsterType
+      mainEffect: string
+      note: string | null
+      hasFourStar: 0 | 1
+      fourStarEffect: string | null
+      imageUrl: string | null
+      createdAt: string
+      updatedAt: string
+    }>
+
+  const sliced = rows.slice(0, pageSize)
+  const hasNext = rows.length > pageSize
+  const hasPrev = safePage > 1
+
+  const items: MonsterRecord[] = sliced.map((row) => ({
+    id: row.id,
+    name: row.name,
+    element: normalizeMonsterElement(row.element),
+    type: row.type,
+    mainEffect: row.mainEffect,
+    note: row.note ?? undefined,
+    hasFourStar: row.hasFourStar === 1,
+    fourStarEffect: row.fourStarEffect ?? undefined,
+    imageUrl: row.imageUrl ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }))
+
+  return { items, hasPrev, hasNext, page: safePage, pageSize }
 }
 
 async function addMonster(record: MonsterRecord) {
@@ -271,4 +380,11 @@ async function deleteMonster(id: string) {
 }
 
 export type { GetMonstersParams, MonsterElement, MonsterRecord, MonsterType }
-export { addMonster, deleteMonster, getMonsterById, getMonsters, updateMonster }
+export {
+  addMonster,
+  deleteMonster,
+  getMonsterById,
+  getMonsters,
+  getMonstersPage,
+  updateMonster,
+}

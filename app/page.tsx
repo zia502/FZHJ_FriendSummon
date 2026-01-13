@@ -18,6 +18,7 @@ export default async function Page({
 }) {
   const params = await searchParams
   const page = Math.max(1, Number(params?.page ?? 1) || 1)
+  const sort = params?.sort === "likes" ? "likes" : "time"
 
   const monsters = await getMonsters({ limit: 5000 })
   const monsterOptions: MonsterSlot[] = monsters.map((m) => ({
@@ -36,6 +37,7 @@ export default async function Page({
   const { items, hasPrev, hasNext } = await getFriendSummonsPage({
     page,
     pageSize: 20,
+    sort,
   })
 
   const initialItems: SummonListItem[] =
@@ -44,6 +46,7 @@ export default async function Page({
           playerId: r.playerId,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,
+          likes: r.likes,
           slots: r.slotIds.map((raw) => {
             if (!raw) return null
             const { monsterId, variant } = parseSlotValue(raw)
@@ -76,6 +79,7 @@ export default async function Page({
       page={page}
       hasPrev={hasPrev}
       hasNext={hasNext}
+      sort={sort}
     />
   )
 }
