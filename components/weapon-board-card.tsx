@@ -10,8 +10,18 @@ import { cn } from "@/lib/utils"
 type WeaponBoardListItem = {
   id: string
   name: string
+  element?: "火" | "风" | "土" | "水"
+  type?: "神" | "魔" | "其他"
   description?: string
   likes: number
+}
+
+function elementTextClass(element: WeaponBoardListItem["element"]) {
+  if (element === "火") return "text-red-600 dark:text-red-400"
+  if (element === "风") return "text-green-600 dark:text-green-400"
+  if (element === "土") return "text-amber-700 dark:text-amber-300"
+  if (element === "水") return "text-blue-600 dark:text-blue-400"
+  return "text-muted-foreground"
 }
 
 function WeaponBoardCard({ item }: { item: WeaponBoardListItem }) {
@@ -62,6 +72,19 @@ function WeaponBoardCard({ item }: { item: WeaponBoardListItem }) {
     <div className="ring-foreground/10 bg-card text-card-foreground rounded-xl px-3 py-2.5 ring-1">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
+          <div className="mb-1 flex items-center gap-2">
+            <span
+              className={cn(
+                "bg-muted/50 rounded px-1.5 py-0.5 text-xs font-semibold",
+                elementTextClass(item.element)
+              )}
+            >
+              {item.element ?? "未知"}
+            </span>
+            <span className="bg-muted/50 text-muted-foreground rounded px-1.5 py-0.5 text-xs font-medium">
+              {item.type ?? "未知"}
+            </span>
+          </div>
           <div className="truncate text-sm font-bold tracking-tight">
             {item.name}
           </div>
@@ -101,4 +124,3 @@ function WeaponBoardCard({ item }: { item: WeaponBoardListItem }) {
 
 export type { WeaponBoardListItem }
 export { WeaponBoardCard }
-

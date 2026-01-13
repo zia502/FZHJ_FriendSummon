@@ -33,6 +33,8 @@ export default async function WeaponShareRoute({
       initialItems={items.map((r) => ({
         id: r.id,
         name: r.name,
+        element: r.element,
+        type: r.type,
         description: r.description,
         likes: r.likes,
       }))}
