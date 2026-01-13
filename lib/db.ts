@@ -188,6 +188,34 @@ function ensureSchema(database: Database.Database) {
     "CREATE INDEX IF NOT EXISTS idx_monsters_updatedAt ON monsters(updatedAt DESC)"
   )
 
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS weapon_boards (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      playerId TEXT,
+      boardImageUrl TEXT NOT NULL,
+      predictionImageUrl TEXT,
+      teamImageUrl0 TEXT,
+      teamImageUrl1 TEXT,
+      likes INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_weapon_boards_updatedAt ON weapon_boards(updatedAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_weapon_boards_likes ON weapon_boards(likes DESC);
+
+    CREATE TABLE IF NOT EXISTS weapon_board_likes (
+      boardId TEXT NOT NULL,
+      voterId TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      PRIMARY KEY (boardId, voterId)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_weapon_board_likes_boardId ON weapon_board_likes(boardId);
+  `)
+
   const friendSummonColumns = database
     .prepare("PRAGMA table_info(friend_summons)")
     .all() as Array<{ name: string }>

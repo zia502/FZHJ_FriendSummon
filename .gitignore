@@ -43,6 +43,11 @@ yarn-error.log*
 /data/*.db-shm
 /data/*.db-wal
 
+# uploaded assets (server-side)
+/data/uploads/*
+!/data/uploads/.gitkeep
+!/data/uploads/**/.gitkeep
+
 # vercel
 .vercel
 
