@@ -90,6 +90,7 @@ async function createWeaponBoardAction(
   const typeRaw = String(formData.get("type") ?? "").trim()
   const description = String(formData.get("description") ?? "").trim()
   const playerIdRaw = String(formData.get("playerId") ?? "").trim()
+  const skillShareCodeRaw = String(formData.get("skillShareCode") ?? "").trim()
 
   const fieldErrors: CreateWeaponBoardState["fieldErrors"] = {}
 
@@ -188,6 +189,7 @@ async function createWeaponBoardAction(
       type: typeRaw as "神" | "魔" | "其他",
       description: description ? description : undefined,
       playerId,
+      skillShareCode: skillShareCodeRaw ? skillShareCodeRaw : undefined,
       boardImageUrl,
       predictionImageUrl,
       teamImageUrl0,

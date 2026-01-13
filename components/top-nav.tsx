@@ -11,9 +11,6 @@ function TopNav() {
         </Link>
         <nav className="flex items-center gap-1">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/skill-share">技能轴分享</Link>
-          </Button>
-          <Button asChild variant="ghost" size="sm">
             <Link href="/weapon-share">武器盘分享</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">

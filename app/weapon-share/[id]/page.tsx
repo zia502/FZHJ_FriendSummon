@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import { CopyTextButton } from "@/components/copy-text-button"
 import { Button } from "@/components/ui/button"
 import { SummonCard, type SummonListItem } from "@/components/summon-card"
 import { getFriendSummonByPlayerId } from "@/lib/friend-summons-store"
@@ -120,6 +121,14 @@ export default async function WeaponBoardDetailRoute({
             <div className="tabular-nums">{board.likes}</div>
           </div>
           <div className="flex items-center justify-between gap-2">
+            <div className="text-muted-foreground text-xs">属性</div>
+            <div className="truncate">{board.element || "（未填写）"}</div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-muted-foreground text-xs">类型</div>
+            <div className="truncate">{board.type || "（未填写）"}</div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
             <div className="text-muted-foreground text-xs">玩家ID</div>
             <div className="truncate">{board.playerId || "（未填写）"}</div>
           </div>
@@ -129,6 +138,12 @@ export default async function WeaponBoardDetailRoute({
               {board.description || "（无）"}
             </div>
           </div>
+          {board.skillShareCode ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-muted-foreground text-xs">技能轴</div>
+              <CopyTextButton text={board.skillShareCode} label="复制技能轴字符串" />
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 grid gap-3">
@@ -176,4 +191,3 @@ export default async function WeaponBoardDetailRoute({
     </main>
   )
 }
-

@@ -9,6 +9,7 @@ type WeaponBoardRecord = {
   type?: WeaponBoardType
   description?: string
   playerId?: string
+  skillShareCode?: string
   boardImageUrl: string
   predictionImageUrl?: string
   teamImageUrl0?: string
@@ -37,6 +38,7 @@ type WeaponBoardRow = {
   type: string | null
   description: string | null
   playerId: string | null
+  skillShareCode: string | null
   boardImageUrl: string
   predictionImageUrl: string | null
   teamImageUrl0: string | null
@@ -113,6 +115,7 @@ async function getWeaponBoardsPage({
         type,
         description,
         playerId,
+        skillShareCode,
         boardImageUrl,
         predictionImageUrl,
         teamImageUrl0,
@@ -142,6 +145,7 @@ async function getWeaponBoardsPage({
       type: isWeaponBoardType(typeText) ? typeText : undefined,
       description: row.description ?? undefined,
       playerId: row.playerId ?? undefined,
+      skillShareCode: row.skillShareCode ?? undefined,
       boardImageUrl: String(row.boardImageUrl),
       predictionImageUrl: row.predictionImageUrl ?? undefined,
       teamImageUrl0: row.teamImageUrl0 ?? undefined,
@@ -167,6 +171,7 @@ async function getWeaponBoardById(id: string): Promise<WeaponBoardRecord | null>
         type,
         description,
         playerId,
+        skillShareCode,
         boardImageUrl,
         predictionImageUrl,
         teamImageUrl0,
@@ -192,6 +197,7 @@ async function getWeaponBoardById(id: string): Promise<WeaponBoardRecord | null>
     type: isWeaponBoardType(typeText) ? typeText : undefined,
     description: row.description ?? undefined,
     playerId: row.playerId ?? undefined,
+    skillShareCode: row.skillShareCode ?? undefined,
     boardImageUrl: String(row.boardImageUrl),
     predictionImageUrl: row.predictionImageUrl ?? undefined,
     teamImageUrl0: row.teamImageUrl0 ?? undefined,
@@ -213,6 +219,7 @@ async function createWeaponBoard(record: WeaponBoardRecord) {
       type,
       description,
       playerId,
+      skillShareCode,
       boardImageUrl,
       predictionImageUrl,
       teamImageUrl0,
@@ -220,7 +227,7 @@ async function createWeaponBoard(record: WeaponBoardRecord) {
       likes,
       createdAt,
       updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `
   ).run(
     record.id,
@@ -229,6 +236,7 @@ async function createWeaponBoard(record: WeaponBoardRecord) {
     record.type ?? null,
     record.description ?? null,
     record.playerId ?? null,
+    record.skillShareCode ?? null,
     record.boardImageUrl,
     record.predictionImageUrl ?? null,
     record.teamImageUrl0 ?? null,

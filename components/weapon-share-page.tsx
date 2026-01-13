@@ -213,6 +213,15 @@ function WeaponSharePage({
               </div>
 
               <div className="grid gap-1.5">
+                <div className="text-sm font-medium">技能轴字符串（可选）</div>
+                <Textarea
+                  name="skillShareCode"
+                  placeholder="请复制游戏中技能轴字符串"
+                  className="min-h-20"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
                 <div className="text-sm font-medium">武器盘图（必填，≤ 4MB）</div>
                 <Input
                   name="boardImage"

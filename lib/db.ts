@@ -196,6 +196,7 @@ function ensureSchema(database: Database.Database) {
       type TEXT,
       description TEXT,
       playerId TEXT,
+      skillShareCode TEXT,
       boardImageUrl TEXT NOT NULL,
       predictionImageUrl TEXT,
       teamImageUrl0 TEXT,
@@ -230,6 +231,9 @@ function ensureSchema(database: Database.Database) {
   if (!weaponBoardColumns.some((c) => c.name === "type")) {
     database.exec("ALTER TABLE weapon_boards ADD COLUMN type TEXT")
     database.exec("CREATE INDEX IF NOT EXISTS idx_weapon_boards_type ON weapon_boards(type)")
+  }
+  if (!weaponBoardColumns.some((c) => c.name === "skillShareCode")) {
+    database.exec("ALTER TABLE weapon_boards ADD COLUMN skillShareCode TEXT")
   }
 
   const friendSummonColumns = database
