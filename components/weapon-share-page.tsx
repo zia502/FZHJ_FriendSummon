@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-import { createWeaponBoardAction, INITIAL_STATE } from "@/app/weapon-share/actions"
+import { createWeaponBoardAction } from "@/app/weapon-share/actions"
 import { WeaponBoardCard, type WeaponBoardListItem } from "@/components/weapon-board-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 type SortMode = "time" | "likes"
 type CreateWeaponBoardState = Awaited<ReturnType<typeof createWeaponBoardAction>>
+const INITIAL_STATE: CreateWeaponBoardState = { ok: false }
 
 function WeaponSharePage({
   initialItems,

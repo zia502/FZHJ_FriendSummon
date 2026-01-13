@@ -25,8 +25,6 @@ type CreateWeaponBoardState = {
   formError?: string
 }
 
-const INITIAL_STATE: CreateWeaponBoardState = { ok: false }
-
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
 
 function safeExtFromFile(file: File): string | null {
@@ -188,4 +186,4 @@ async function createWeaponBoardAction(
   }
 }
 
-export { createWeaponBoardAction, INITIAL_STATE }
+export { createWeaponBoardAction }
