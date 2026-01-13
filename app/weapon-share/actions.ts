@@ -188,6 +188,4 @@ async function createWeaponBoardAction(
   }
 }
 
-export type { CreateWeaponBoardState }
 export { createWeaponBoardAction, INITIAL_STATE }
-
