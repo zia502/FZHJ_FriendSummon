@@ -118,7 +118,7 @@ function WeaponSharePage({
                 <div className="text-sm font-medium">武器盘名（必填）</div>
                 <Input
                   name="name"
-                  placeholder="例如：奥丁枪 / 纯土短"
+                  placeholder="例如：火老王盘 / 火方阵单面满爆"
                   aria-invalid={!!fieldError.name}
                 />
                 {fieldError.name && (
@@ -145,7 +145,7 @@ function WeaponSharePage({
                 <div className="text-sm font-medium">描述（可选）</div>
                 <Textarea
                   name="description"
-                  placeholder="可以写配盘思路 / 轴 / 备注..."
+                  placeholder="可以写配盘思路 / 备注..."
                 />
               </div>
 
