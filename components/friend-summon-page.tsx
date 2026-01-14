@@ -132,21 +132,28 @@ function FriendSummonPage({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <div className="text-muted-foreground text-xs">
-              匹配方式：{matchMode === "exact" ? "精确（A 和 B）" : "模糊（A 或 B）"}
+            <div className="text-muted-foreground text-xs transition-all duration-300">
+              匹配方式：
+              <span className="inline-block transition-all duration-300">
+                {matchMode === "exact" ? "精确（A 和 B）" : "模糊（A 或 B）"}
+              </span>
             </div>
             <label className="flex items-center gap-2">
-              <span className="text-muted-foreground text-xs">模糊</span>
+              <span className="text-muted-foreground text-xs transition-all duration-300 peer-checked:font-medium">
+                模糊
+              </span>
               <input
                 type="checkbox"
                 className="peer sr-only"
                 checked={matchMode === "exact"}
                 onChange={(e) => setMatchMode(e.target.checked ? "exact" : "fuzzy")}
               />
-              <span className="bg-muted peer-checked:bg-primary peer-focus-visible:ring-ring ring-offset-background relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full ring-offset-2 transition-colors peer-focus-visible:outline-none peer-focus-visible:ring-2">
-                <span className="bg-background shadow-sm peer-checked:translate-x-4 pointer-events-none inline-block h-4 w-4 translate-x-0.5 rounded-full transition-transform" />
+              <span
+                className="bg-muted peer-checked:bg-primary peer-focus-visible:ring-ring ring-offset-background relative inline-flex h-5 w-9 cursor-pointer items-center rounded-full ring-offset-2 transition-colors duration-300 ease-in-out peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-checked:shadow-lg after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-background after:shadow-sm after:transition-transform after:duration-300 after:ease-in-out peer-checked:after:translate-x-4"
+              />
+              <span className="text-muted-foreground text-xs transition-all duration-300">
+                精确
               </span>
-              <span className="text-muted-foreground text-xs">精确</span>
             </label>
           </div>
           <div className="grid grid-cols-2 gap-2">
