@@ -148,6 +148,13 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
     return "border-slate-700"
   }, [])
 
+  const popoverPositionClassForIndex = React.useCallback((index: number) => {
+    const col = index % 5
+    if (col === 0 || col === 1) return "left-0"
+    if (col === 3 || col === 4) return "right-0 left-auto"
+    return "left-1/2 -translate-x-1/2"
+  }, [])
+
   React.useEffect(() => {
     if (typeof window === "undefined") return
 
@@ -289,7 +296,8 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
               {slot && (
                 <div
                   className={cn(
-                    "absolute left-1/2 top-0 z-50 w-64 -translate-x-1/2 -translate-y-[calc(100%+8px)]",
+                    "absolute top-0 z-50 w-64 max-w-[calc(100vw-2rem)] -translate-y-[calc(100%+8px)]",
+                    popoverPositionClassForIndex(index),
                     coarsePointer
                       ? isOpen
                         ? "block"
