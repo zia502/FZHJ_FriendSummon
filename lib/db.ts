@@ -219,6 +219,19 @@ function ensureSchema(database: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_weapon_board_likes_boardId ON weapon_board_likes(boardId);
   `)
 
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS heihua_terms (
+      id TEXT PRIMARY KEY,
+      term TEXT NOT NULL,
+      meaning TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_heihua_terms_updatedAt ON heihua_terms(updatedAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_heihua_terms_term ON heihua_terms(term);
+  `)
+
   const weaponBoardColumns = database
     .prepare("PRAGMA table_info(weapon_boards)")
     .all() as Array<{ name: string }>

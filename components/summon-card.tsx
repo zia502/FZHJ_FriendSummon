@@ -80,6 +80,9 @@ type MonsterSlot = {
 function SummonCard({ item, className }: { item: SummonListItem; className?: string }) {
   const [likes, setLikes] = React.useState(item.likes ?? 0)
   const [liked, setLiked] = React.useState(false)
+  const [openSlotIndex, setOpenSlotIndex] = React.useState<number | null>(null)
+  const [coarsePointer, setCoarsePointer] = React.useState(false)
+  const cardRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
     setLikes(item.likes ?? 0)
@@ -145,8 +148,49 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
     return "border-slate-700"
   }, [])
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const media = window.matchMedia("(hover: none), (pointer: coarse)")
+    const sync = () => setCoarsePointer(!!media.matches)
+    sync()
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", sync)
+      return () => media.removeEventListener("change", sync)
+    }
+
+    media.addListener(sync)
+    return () => media.removeListener(sync)
+  }, [])
+
+  React.useEffect(() => {
+    if (!coarsePointer) return
+    if (openSlotIndex === null) return
+
+    const onPointerDown = (event: PointerEvent) => {
+      const root = cardRef.current
+      if (!root) return
+      const target = event.target
+      if (target instanceof Node && root.contains(target)) return
+      setOpenSlotIndex(null)
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenSlotIndex(null)
+    }
+
+    document.addEventListener("pointerdown", onPointerDown, { capture: true })
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, { capture: true })
+      document.removeEventListener("keydown", onKeyDown)
+    }
+  }, [coarsePointer, openSlotIndex])
+
   return (
     <div
+      ref={cardRef}
       className={cn(
         "ring-foreground/10 bg-card text-card-foreground rounded-xl ring-1",
         "px-3 py-2.5",
@@ -189,43 +233,70 @@ function SummonCard({ item, className }: { item: SummonListItem; className?: str
           const hasImage = !!slot?.imageUrl
           const initial = slot?.name?.trim()?.slice(0, 1) ?? ""
           const star = slot?.star ?? 5
+          const isOpen = openSlotIndex === index
           return (
             <div key={index} className="group relative">
-              <div
-                className={cn(
-                  "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset p-[2px]",
-                  ringClassForIndex(index)
-                )}
-              >
-                {hasImage ? (
-                  <div className="relative size-full">
-                    <Image
-                      src={slot!.imageUrl!}
-                      alt={slot?.name ?? "魔物"}
-                      width={64}
-                      height={64}
-                      className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
-                      priority={false}
-                      unoptimized={slot!.imageUrl!.startsWith("/uploads/")}
-                    />
-                    <span
-                      className={cn(
-                        "bg-black/60 text-white shadow-sm",
-                        "absolute left-1 top-1 rounded px-1 py-0.5 text-[10px] leading-none"
-                      )}
-                    >
-                      ⭐{star}
+              {slot ? (
+                <button
+                  type="button"
+                  className={cn(
+                    "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset p-[2px] text-left",
+                    ringClassForIndex(index),
+                    coarsePointer && isOpen && "outline-none ring-offset-background ring-offset-2"
+                  )}
+                  aria-label={`查看 ${slot.name} 被动`}
+                  aria-expanded={coarsePointer ? isOpen : undefined}
+                  onClick={() => {
+                    if (!coarsePointer) return
+                    setOpenSlotIndex((prev) => (prev === index ? null : index))
+                  }}
+                >
+                  {hasImage ? (
+                    <div className="relative size-full">
+                      <Image
+                        src={slot.imageUrl!}
+                        alt={slot.name ?? "魔物"}
+                        width={64}
+                        height={64}
+                        className="block size-full rounded-[calc(var(--radius)-2px)] object-contain"
+                        priority={false}
+                        unoptimized={slot.imageUrl!.startsWith("/uploads/")}
+                      />
+                      <span
+                        className={cn(
+                          "bg-black/60 text-white shadow-sm",
+                          "absolute left-1 top-1 rounded px-1 py-0.5 text-[10px] leading-none"
+                        )}
+                      >
+                        ⭐{star}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">
+                      {initial}
                     </span>
-                  </div>
-                ) : slot ? (
-                  <span className="select-none text-2xl leading-none font-bold text-slate-700 dark:text-slate-200">
-                    {initial}
-                  </span>
-                ) : null}
-              </div>
+                  )}
+                </button>
+              ) : (
+                <div
+                  className={cn(
+                    "bg-muted/20 flex size-16 items-center justify-center rounded-md ring-2 ring-inset p-[2px]",
+                    ringClassForIndex(index)
+                  )}
+                />
+              )}
 
               {slot && (
-                <div className="pointer-events-none absolute left-1/2 top-0 z-50 hidden w-64 -translate-x-1/2 -translate-y-[calc(100%+8px)] group-hover:block">
+                <div
+                  className={cn(
+                    "absolute left-1/2 top-0 z-50 w-64 -translate-x-1/2 -translate-y-[calc(100%+8px)]",
+                    coarsePointer
+                      ? isOpen
+                        ? "block"
+                        : "hidden"
+                      : "hidden group-hover:block group-focus-within:block"
+                  )}
+                >
                   <div
                     className={cn(
                       "bg-popover text-popover-foreground border-2 shadow-md",

@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { adminLogin, adminLogout } from "@/app/admin/actions"
 import { deleteFriendSummonAction } from "@/app/admin/friend-summons/actions"
+import { addHeihuaTermAction, deleteHeihuaTermAction } from "@/app/admin/heihua/actions"
 import { addMonsterAction, deleteMonsterAction } from "@/app/admin/monsters/actions"
 import { getFriendSummonByPlayerId } from "@/lib/friend-summons-store"
+import { getHeihuaTerms } from "@/lib/heihua-store"
 import { getMonstersPage, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
 
 function withVersion(url: string | undefined, version: string | undefined) {
@@ -45,6 +47,8 @@ export default async function AdminPage({
   const element = String(params?.element ?? "").trim()
   const mPageRaw = String(params?.m_page ?? "").trim()
   const mPage = Math.max(1, Number(mPageRaw || 1) || 1)
+
+  const hq = String(params?.h_q ?? "").trim()
 
   const fsPlayerId = String(params?.fs_playerId ?? "").trim()
   const fsError = String(params?.fs_error ?? "").trim()
@@ -125,6 +129,8 @@ export default async function AdminPage({
     page: mPage,
     pageSize: 5,
   })
+
+  const heihuaTerms = await getHeihuaTerms({ q: hq, limit: 30 })
 
   const typeOptions: Array<MonsterType> = ["神", "魔", "属性", "其他"]
   const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水"]
@@ -499,6 +505,92 @@ export default async function AdminPage({
           </CardContent>
         </Card>
       )}
+
+      <Card className="mt-4" id="heihua">
+        <CardHeader>
+          <CardTitle>黑话编辑</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={addHeihuaTermAction} className="grid gap-4">
+            <div className="grid gap-2">
+              <div className="text-sm font-medium">黑话（必填）</div>
+              <Input name="term" placeholder="例如：XX" required />
+            </div>
+            <div className="grid gap-2">
+              <div className="text-sm font-medium">解释（必填）</div>
+              <Textarea name="meaning" placeholder="支持换行" required />
+            </div>
+            <Button type="submit">提交黑话</Button>
+            {!isSuperAdmin && (
+              <div className="text-muted-foreground text-xs">
+                当前为管理员权限：可新增；编辑/删除需要超级管理员。
+              </div>
+            )}
+          </form>
+
+          <div className="mt-6 border-t pt-4">
+            <div className="text-sm font-semibold">
+              {hq ? "搜索结果" : "最新黑话"}
+            </div>
+
+            <form className="mt-3 grid gap-2" action="/admin#heihua" method="get">
+              <div className="flex items-center gap-2">
+                <Input
+                  name="h_q"
+                  placeholder="搜索：黑话 / 解释"
+                  defaultValue={hq}
+                />
+                <Button type="submit" variant="outline">
+                  搜索
+                </Button>
+              </div>
+            </form>
+
+            <div className="mt-3 grid gap-2">
+              {heihuaTerms.length === 0 ? (
+                <div className="text-muted-foreground text-sm">
+                  暂无数据{hq ? "（无匹配结果）" : "。"}
+                </div>
+              ) : (
+                heihuaTerms.map((t) => (
+                  <div
+                    key={t.id}
+                    className="ring-foreground/10 bg-background grid gap-2 rounded-lg p-3 ring-1"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <code className="bg-primary/10 text-primary rounded px-2 py-1 text-sm font-semibold">
+                        {t.term}
+                      </code>
+                      {isSuperAdmin && (
+                        <div className="flex items-center gap-2">
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={`/admin/heihua/${t.id}`}>编辑</Link>
+                          </Button>
+                          <form action={deleteHeihuaTermAction}>
+                            <input type="hidden" name="id" value={t.id} />
+                            <Button type="submit" size="sm" variant="destructive">
+                              删除
+                            </Button>
+                          </form>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-muted-foreground max-h-20 overflow-hidden whitespace-pre-wrap text-sm leading-relaxed">
+                      {t.meaning}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="text-muted-foreground mt-3 text-xs">
+              <Link href="/heihua" className="underline underline-offset-2">
+                前台预览：黑话查看
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </main>
   )
 }
