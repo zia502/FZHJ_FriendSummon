@@ -19,7 +19,7 @@ export default async function HeihuaPage({
     <main className="mx-auto w-full max-w-md px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-foreground text-xl font-bold tracking-tight">
-          黑话查看
+          黑话
         </h1>
         <Button asChild variant="outline" size="sm">
           <Link href="/admin">去编辑</Link>

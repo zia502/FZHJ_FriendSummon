@@ -585,7 +585,7 @@ export default async function AdminPage({
 
             <div className="text-muted-foreground mt-3 text-xs">
               <Link href="/heihua" className="underline underline-offset-2">
-                前台预览：黑话查看
+                前台预览：黑话
               </Link>
             </div>
           </div>
