@@ -10,9 +10,16 @@ import { adminLogin, adminLogout } from "@/app/admin/actions"
 import { deleteFriendSummonAction } from "@/app/admin/friend-summons/actions"
 import { addHeihuaTermAction, deleteHeihuaTermAction } from "@/app/admin/heihua/actions"
 import { addMonsterAction, deleteMonsterAction } from "@/app/admin/monsters/actions"
+import { AdminModuleSelector } from "@/app/admin/module-selector"
 import { getFriendSummonByPlayerId } from "@/lib/friend-summons-store"
 import { getHeihuaTerms } from "@/lib/heihua-store"
 import { getMonstersPage, type MonsterElement, type MonsterType } from "@/lib/monsters-store"
+import {
+  getWeaponBoardsPage,
+  type WeaponBoardElement,
+  type WeaponBoardSortMode,
+  type WeaponBoardType,
+} from "@/lib/weapon-boards-store"
 
 function withVersion(url: string | undefined, version: string | undefined) {
   if (!url) return undefined
@@ -42,6 +49,29 @@ export default async function AdminPage({
   const missingEnv =
     errorParam === "missing_env" ||
     (!adminConfigured && !superConfigured)
+
+  const modulesRaw = String(params?.modules ?? "").trim()
+  const moduleItems: Array<{ key: string; label: string }> = [
+    { key: "monsters", label: "魔物管理" },
+    { key: "weapon-boards", label: "武器盘管理" },
+    { key: "heihua", label: "黑话编辑" },
+    ...(isSuperAdmin ? [{ key: "friend-summons", label: "好友募集查询器" }] : []),
+  ]
+  const moduleAllow = new Set(moduleItems.map((m) => m.key))
+  const selectedModules = new Set(
+    modulesRaw
+      ? modulesRaw
+          .split(",")
+          .map((s) => s.trim())
+          .filter((k) => k && moduleAllow.has(k))
+      : moduleItems.map((m) => m.key)
+  )
+  const showMonsters = selectedModules.has("monsters")
+  const showWeaponBoards = selectedModules.has("weapon-boards")
+  const showHeihua = selectedModules.has("heihua")
+  const showFriendSummons =
+    isSuperAdmin && selectedModules.has("friend-summons")
+
   const q = String(params?.q ?? "").trim()
   const type = String(params?.type ?? "").trim()
   const element = String(params?.element ?? "").trim()
@@ -50,11 +80,20 @@ export default async function AdminPage({
 
   const hq = String(params?.h_q ?? "").trim()
 
+  const wbq = String(params?.wb_q ?? "").trim()
+  const wbElementRaw = String(params?.wb_element ?? "全部").trim()
+  const wbTypeRaw = String(params?.wb_type ?? "全部").trim()
+  const wbSortRaw = String(params?.wb_sort ?? "").trim()
+  const wbPageRaw = String(params?.wb_page ?? "").trim()
+  const wbPage = Math.max(1, Number(wbPageRaw || 1) || 1)
+
   const fsPlayerId = String(params?.fs_playerId ?? "").trim()
   const fsError = String(params?.fs_error ?? "").trim()
   const fsDeleted = String(params?.fs_deleted ?? "").trim()
   const friendSummonRecord =
-    isSuperAdmin && fsPlayerId ? await getFriendSummonByPlayerId(fsPlayerId) : null
+    showFriendSummons && fsPlayerId
+      ? await getFriendSummonByPlayerId(fsPlayerId)
+      : null
 
   if (!authed) {
     return (
@@ -105,9 +144,16 @@ export default async function AdminPage({
     )
   }
 
-  const typeParam = (type === "神" || type === "魔" || type === "属性" || type === "其他" || type === "全部" ? type : "全部") as
-    | MonsterType
-    | "全部"
+  const typeOptions: Array<MonsterType> = ["神", "魔", "属性", "其他"]
+  const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水"]
+
+  const typeParam = (type === "神" ||
+  type === "魔" ||
+  type === "属性" ||
+  type === "其他" ||
+  type === "全部"
+    ? type
+    : "全部") as MonsterType | "全部"
 
   const elementParam = (element === "火" ||
   element === "风" ||
@@ -117,31 +163,76 @@ export default async function AdminPage({
     ? element
     : "全部") as MonsterElement | "全部"
 
+  const monstersPage = showMonsters
+    ? await getMonstersPage({
+        q,
+        type: typeParam,
+        element: elementParam,
+        page: mPage,
+        pageSize: 5,
+      })
+    : { items: [], hasPrev: false, hasNext: false, page: 1, pageSize: 5 }
+
+  const { items: filtered, hasPrev: mHasPrev, hasNext: mHasNext, page: mPageSafe } =
+    monstersPage
+
+  const heihuaTerms = showHeihua ? await getHeihuaTerms({ q: hq, limit: 30 }) : []
+
+  const wbElement = (wbElementRaw === "火" ||
+  wbElementRaw === "风" ||
+  wbElementRaw === "土" ||
+  wbElementRaw === "水"
+    ? wbElementRaw
+    : "全部") as WeaponBoardElement | "全部"
+
+  const wbType = (wbTypeRaw === "神" ||
+  wbTypeRaw === "魔" ||
+  wbTypeRaw === "其他"
+    ? wbTypeRaw
+    : "全部") as WeaponBoardType | "全部"
+
+  const wbSort = (wbSortRaw === "likes" ? "likes" : "time") as WeaponBoardSortMode
+
+  const weaponBoardsPage = showWeaponBoards
+    ? await getWeaponBoardsPage({
+        page: wbPage,
+        pageSize: 5,
+        sort: wbSort,
+        q: wbq,
+        element: wbElement,
+        type: wbType,
+      })
+    : { items: [], hasPrev: false, hasNext: false, page: 1, pageSize: 5 }
+
   const {
-    items: filtered,
-    hasPrev: mHasPrev,
-    hasNext: mHasNext,
-    page: mPageSafe,
-  } = await getMonstersPage({
-    q,
-    type: typeParam,
-    element: elementParam,
-    page: mPage,
-    pageSize: 5,
-  })
+    items: wbItems,
+    hasPrev: wbHasPrev,
+    hasNext: wbHasNext,
+    page: wbPageSafe,
+  } = weaponBoardsPage
 
-  const heihuaTerms = await getHeihuaTerms({ q: hq, limit: 30 })
-
-  const typeOptions: Array<MonsterType> = ["神", "魔", "属性", "其他"]
-  const elementOptions: Array<MonsterElement> = ["火", "风", "土", "水"]
+  const wbElementOptions: Array<WeaponBoardElement> = ["火", "风", "土", "水"]
+  const wbTypeOptions: Array<WeaponBoardType> = ["神", "魔", "其他"]
 
   const monstersHref = (page: number) => {
     const query = new URLSearchParams()
+    if (modulesRaw) query.set("modules", modulesRaw)
     if (q) query.set("q", q)
     if (type) query.set("type", type)
     if (element) query.set("element", element)
     query.set("m_page", String(page))
     return `/admin?${query.toString()}#monsters`
+  }
+
+  const weaponBoardsHref = (page: number) => {
+    const query = new URLSearchParams()
+    if (modulesRaw) query.set("modules", modulesRaw)
+    if (wbq) query.set("wb_q", wbq)
+    if (wbElementRaw) query.set("wb_element", wbElementRaw)
+    if (wbTypeRaw) query.set("wb_type", wbTypeRaw)
+    if (wbSortRaw) query.set("wb_sort", wbSortRaw)
+    query.set("wb_page", String(page))
+    return `/admin?${query.toString()}#weapon-boards`
   }
 
   return (
@@ -150,17 +241,27 @@ export default async function AdminPage({
         <h1 className="text-foreground text-xl font-bold tracking-tight">
           后台管理
         </h1>
-        <form action={adminLogout}>
-          <Button type="submit" variant="outline" size="sm">
-            退出
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          <AdminModuleSelector items={moduleItems} />
+          <form action={adminLogout}>
+            <Button type="submit" variant="outline" size="sm">
+              退出
+            </Button>
+          </form>
+        </div>
       </div>
 
       <div className="text-muted-foreground mt-2 text-xs">
         当前权限：{isSuperAdmin ? "超级管理员" : "管理员"}
       </div>
 
+      {selectedModules.size === 0 && (
+        <div className="text-muted-foreground mt-4 text-sm">
+          请点击右上角「管理模块」下拉框，勾选要显示的管理功能。
+        </div>
+      )}
+
+      {showMonsters && (
       <Card className="mt-4" id="monsters">
         <CardHeader>
           <CardTitle>魔物管理</CardTitle>
@@ -267,7 +368,10 @@ export default async function AdminPage({
               </div>
             </div>
 
-            <form className="mt-3 grid gap-2" action="/admin" method="get">
+            <form className="mt-3 grid gap-2" action="/admin#monsters" method="get">
+              {modulesRaw && (
+                <input type="hidden" name="modules" value={modulesRaw} />
+              )}
               <input type="hidden" name="m_page" value="1" />
               <div className="flex items-center gap-2">
                 <Input
@@ -398,8 +502,157 @@ export default async function AdminPage({
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {isSuperAdmin && (
+      {showWeaponBoards && (
+        <Card className="mt-4" id="weapon-boards">
+          <CardHeader>
+            <CardTitle>武器盘管理</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-muted-foreground text-sm">
+              支持按名称/属性/类型筛选。编辑需要超级管理员权限。
+            </div>
+
+            <form
+              className="mt-3 grid gap-2"
+              action="/admin#weapon-boards"
+              method="get"
+            >
+              {modulesRaw && (
+                <input type="hidden" name="modules" value={modulesRaw} />
+              )}
+              <input type="hidden" name="wb_page" value="1" />
+
+              <div className="flex items-center gap-2">
+                <Input
+                  name="wb_q"
+                  placeholder="搜索：武器盘名"
+                  defaultValue={wbq}
+                />
+                <Button type="submit" variant="outline">
+                  搜索
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  name="wb_element"
+                  defaultValue={wbElement}
+                  className="border-input bg-background h-9 flex-1 rounded-md border px-2 text-sm"
+                >
+                  <option value="全部">全部属性</option>
+                  {wbElementOptions.map((el) => (
+                    <option key={el} value={el}>
+                      {el}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  name="wb_type"
+                  defaultValue={wbType}
+                  className="border-input bg-background h-9 flex-1 rounded-md border px-2 text-sm"
+                >
+                  <option value="全部">全部类型</option>
+                  {wbTypeOptions.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  name="wb_sort"
+                  defaultValue={wbSort}
+                  className="border-input bg-background h-9 flex-1 rounded-md border px-2 text-sm"
+                >
+                  <option value="time">按更新时间</option>
+                  <option value="likes">按点赞</option>
+                </select>
+              </div>
+            </form>
+
+            <div className="mt-3 grid gap-2">
+              {wbItems.length === 0 ? (
+                <div className="text-muted-foreground text-sm">
+                  暂无数据{wbq ? "（无匹配结果）" : "。"}
+                </div>
+              ) : (
+                wbItems.map((b) => (
+                  <div
+                    key={b.id}
+                    className="ring-foreground/10 bg-background grid gap-2 rounded-lg p-3 ring-1"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">
+                          {b.name}
+                        </div>
+                        <div className="text-muted-foreground mt-1 text-xs">
+                          ID：{b.id}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/weapon-share/${b.id}`}>查看</Link>
+                        </Button>
+                        {isSuperAdmin && (
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={`/admin/weapon-boards/${b.id}`}>
+                              编辑
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
+                      <span className="truncate">
+                        属性：{b.element || "（未填）"} / 类型：
+                        {b.type || "（未填）"}
+                      </span>
+                      <span className="tabular-nums">👍 {b.likes}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                disabled={!wbHasPrev}
+              >
+                <Link href={weaponBoardsHref(Math.max(1, wbPageSafe - 1))}>
+                  上一页
+                </Link>
+              </Button>
+              <div className="text-muted-foreground text-xs">
+                第 {wbPageSafe} 页
+              </div>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                disabled={!wbHasNext}
+              >
+                <Link href={weaponBoardsHref(wbPageSafe + 1)}>下一页</Link>
+              </Button>
+            </div>
+
+            <div className="text-muted-foreground mt-3 text-xs">
+              <Link href="/weapon-share" className="underline underline-offset-2">
+                前台预览：武器盘分享
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {showFriendSummons && (
         <Card className="mt-4" id="friend-summons">
           <CardHeader>
             <CardTitle>好友募集查询器</CardTitle>
@@ -414,6 +667,9 @@ export default async function AdminPage({
               action="/admin#friend-summons"
               method="get"
             >
+              {modulesRaw && (
+                <input type="hidden" name="modules" value={modulesRaw} />
+              )}
               <div className="flex items-center gap-2">
                 <Input
                   name="fs_playerId"
@@ -506,6 +762,7 @@ export default async function AdminPage({
         </Card>
       )}
 
+      {showHeihua && (
       <Card className="mt-4" id="heihua">
         <CardHeader>
           <CardTitle>黑话编辑</CardTitle>
@@ -534,6 +791,9 @@ export default async function AdminPage({
             </div>
 
             <form className="mt-3 grid gap-2" action="/admin#heihua" method="get">
+              {modulesRaw && (
+                <input type="hidden" name="modules" value={modulesRaw} />
+              )}
               <div className="flex items-center gap-2">
                 <Input
                   name="h_q"
@@ -591,6 +851,7 @@ export default async function AdminPage({
           </div>
         </CardContent>
       </Card>
+      )}
     </main>
   )
 }

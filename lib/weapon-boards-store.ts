@@ -247,6 +247,54 @@ async function createWeaponBoard(record: WeaponBoardRecord) {
   )
 }
 
+async function updateWeaponBoard(record: {
+  id: string
+  name: string
+  element?: WeaponBoardElement
+  type?: WeaponBoardType
+  description?: string
+  playerId?: string
+  skillShareCode?: string
+  boardImageUrl: string
+  predictionImageUrl?: string
+  teamImageUrl0?: string
+  teamImageUrl1?: string
+  updatedAt: string
+}) {
+  const db = getDb()
+  db.prepare(
+    `
+    UPDATE weapon_boards
+    SET
+      name = ?,
+      element = ?,
+      type = ?,
+      description = ?,
+      playerId = ?,
+      skillShareCode = ?,
+      boardImageUrl = ?,
+      predictionImageUrl = ?,
+      teamImageUrl0 = ?,
+      teamImageUrl1 = ?,
+      updatedAt = ?
+    WHERE id = ?
+  `
+  ).run(
+    record.name,
+    record.element ?? null,
+    record.type ?? null,
+    record.description ?? null,
+    record.playerId ?? null,
+    record.skillShareCode ?? null,
+    record.boardImageUrl,
+    record.predictionImageUrl ?? null,
+    record.teamImageUrl0 ?? null,
+    record.teamImageUrl1 ?? null,
+    record.updatedAt,
+    record.id
+  )
+}
+
 async function likeWeaponBoard({
   id,
   voterId,
@@ -288,4 +336,10 @@ export type {
   WeaponBoardSortMode,
   WeaponBoardType,
 }
-export { createWeaponBoard, getWeaponBoardById, getWeaponBoardsPage, likeWeaponBoard }
+export {
+  createWeaponBoard,
+  getWeaponBoardById,
+  getWeaponBoardsPage,
+  likeWeaponBoard,
+  updateWeaponBoard,
+}
