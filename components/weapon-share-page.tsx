@@ -79,7 +79,6 @@ function WeaponSharePage({
     formRef.current?.reset()
     setShowForm(false)
     router.replace(linkFor({ page: 1, sort, saved: true }))
-    router.refresh()
   }, [linkFor, router, sort, state.createdId, state.ok])
 
   React.useEffect(() => {
@@ -135,7 +134,13 @@ function WeaponSharePage({
               </div>
             )}
 
-            <form ref={formRef} action={formAction} className="mt-4 grid gap-3">
+            <form
+              ref={formRef}
+              action={formAction}
+              method="post"
+              encType="multipart/form-data"
+              className="mt-4 grid gap-3"
+            >
               <div className="grid gap-1.5">
                 <div className="text-sm font-medium">武器盘名（必填）</div>
                 <Input

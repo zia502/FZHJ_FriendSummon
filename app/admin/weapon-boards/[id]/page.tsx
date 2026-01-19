@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { updateWeaponBoardAction } from "@/app/admin/weapon-boards/actions"
+import {
+  deleteWeaponBoardAction,
+  updateWeaponBoardAction,
+} from "@/app/admin/weapon-boards/actions"
 import {
   getWeaponBoardById,
   type WeaponBoardElement,
@@ -66,7 +69,12 @@ export default async function WeaponBoardEditPage({
           <CardTitle className="truncate">{board.name}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={updateWeaponBoardAction} className="grid gap-4">
+          <form
+            action={updateWeaponBoardAction}
+            method="post"
+            encType="multipart/form-data"
+            className="grid gap-4"
+          >
             <input type="hidden" name="id" value={board.id} />
 
             <div className="grid gap-2">
@@ -239,6 +247,31 @@ export default async function WeaponBoardEditPage({
               </Link>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4" id="delete">
+        <CardHeader>
+          <CardTitle>删除（危险操作）</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            action={deleteWeaponBoardAction}
+            method="post"
+            className="grid gap-3"
+          >
+            <input type="hidden" name="id" value={board.id} />
+            <div className="text-muted-foreground text-sm">
+              删除后不可恢复，将同时清理该武器盘的数据库记录与（如果是本地上传的）图片文件。
+            </div>
+            <div className="text-muted-foreground text-xs">
+              为防误触，请输入同样的武器盘 ID 以确认删除。
+            </div>
+            <Input name="confirmId" placeholder={`确认ID：${board.id}`} />
+            <Button type="submit" variant="destructive">
+              删除该武器盘
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </main>

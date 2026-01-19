@@ -329,6 +329,21 @@ async function likeWeaponBoard({
   return tx()
 }
 
+async function deleteWeaponBoard(id: string): Promise<boolean> {
+  const db = getDb()
+
+  const removeLikes = db.prepare("DELETE FROM weapon_board_likes WHERE boardId = ?")
+  const removeBoard = db.prepare("DELETE FROM weapon_boards WHERE id = ?")
+
+  const tx = db.transaction(() => {
+    removeLikes.run(id)
+    const result = removeBoard.run(id) as unknown as { changes: number }
+    return result.changes > 0
+  })
+
+  return tx()
+}
+
 export type {
   GetWeaponBoardsPageResult,
   WeaponBoardElement,
@@ -338,6 +353,7 @@ export type {
 }
 export {
   createWeaponBoard,
+  deleteWeaponBoard,
   getWeaponBoardById,
   getWeaponBoardsPage,
   likeWeaponBoard,

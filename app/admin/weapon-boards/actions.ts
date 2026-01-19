@@ -1,6 +1,6 @@
 "use server"
 
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, unlink, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { revalidatePath } from "next/cache"
@@ -8,6 +8,7 @@ import { redirect } from "next/navigation"
 
 import { requireSuperAdmin } from "@/lib/admin-auth"
 import {
+  deleteWeaponBoard,
   getWeaponBoardById,
   type WeaponBoardElement,
   type WeaponBoardType,
@@ -158,5 +159,59 @@ async function updateWeaponBoardAction(formData: FormData) {
   redirect("/admin#weapon-boards")
 }
 
-export { updateWeaponBoardAction }
+function localUploadCandidates(url: string) {
+  if (!url.startsWith("/uploads/weapon-boards/")) return []
+  const raw = url.replace("/uploads/weapon-boards/", "")
+  const filename = raw.split("?")[0]?.split("#")[0] ?? ""
+  if (!filename) return []
+  if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) {
+    return []
+  }
+  return [
+    path.join(process.cwd(), "data", "uploads", "weapon-boards", filename),
+    path.join(process.cwd(), "public", "uploads", "weapon-boards", filename),
+  ]
+}
+
+async function deleteWeaponBoardAction(formData: FormData) {
+  await requireSuperAdmin()
+
+  const id = String(formData.get("id") ?? "").trim()
+  if (!id) throw new Error("缺少武器盘ID")
+
+  const confirmId = String(formData.get("confirmId") ?? "").trim()
+  if (confirmId !== id) throw new Error("确认ID不一致，请重新输入以确认删除")
+
+  const existing = await getWeaponBoardById(id)
+  if (!existing) {
+    revalidatePath("/admin")
+    redirect("/admin#weapon-boards")
+  }
+
+  const board = existing
+  const urls = [
+    board.boardImageUrl,
+    board.predictionImageUrl,
+    board.teamImageUrl0,
+    board.teamImageUrl1,
+  ].filter((v): v is string => !!v && typeof v === "string")
+
+  const candidates = urls.flatMap((url) => localUploadCandidates(url))
+  await Promise.all(
+    candidates.map(async (filePath) => {
+      try {
+        await unlink(filePath)
+      } catch {
+        // ignore
+      }
+    })
+  )
+
+  await deleteWeaponBoard(id)
+  revalidatePath("/weapon-share")
+  revalidatePath("/admin")
+  redirect("/admin#weapon-boards")
+}
+
+export { deleteWeaponBoardAction, updateWeaponBoardAction }
 

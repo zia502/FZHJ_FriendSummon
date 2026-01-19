@@ -43,7 +43,12 @@ export default async function MonsterEditPage({
           <CardTitle>{monster.name}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={updateMonsterAction} className="grid gap-4">
+          <form
+            action={updateMonsterAction}
+            method="post"
+            encType="multipart/form-data"
+            className="grid gap-4"
+          >
             <input type="hidden" name="id" value={monster.id} />
 
             <div className="grid gap-2">

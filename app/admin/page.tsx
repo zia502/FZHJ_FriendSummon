@@ -269,6 +269,8 @@ export default async function AdminPage({
         <CardContent>
           <form
             action={addMonsterAction}
+            method="post"
+            encType="multipart/form-data"
             className="grid gap-4"
           >
             <div className="grid gap-2">
@@ -602,6 +604,13 @@ export default async function AdminPage({
                           <Button asChild size="sm" variant="outline">
                             <Link href={`/admin/weapon-boards/${b.id}`}>
                               编辑
+                            </Link>
+                          </Button>
+                        )}
+                        {isSuperAdmin && (
+                          <Button asChild size="sm" variant="destructive">
+                            <Link href={`/admin/weapon-boards/${b.id}#delete`}>
+                              删除
                             </Link>
                           </Button>
                         )}
