@@ -31,12 +31,19 @@ function safeExtFromFile(file: File): string | null {
   if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "jpg"
   if (name.endsWith(".webp")) return "webp"
   if (name.endsWith(".gif")) return "gif"
+  // 手机拍照可能是 HEIC/HEIF 格式，浏览器会自动转换
+  if (name.endsWith(".heic") || name.endsWith(".heif")) return "jpg"
 
   const type = (file.type || "").toLowerCase()
   if (type === "image/png") return "png"
   if (type === "image/jpeg") return "jpg"
   if (type === "image/webp") return "webp"
   if (type === "image/gif") return "gif"
+  // 手机相册图片可能是 HEIC/HEIF
+  if (type === "image/heic" || type === "image/heif") return "jpg"
+
+  // 如果文件类型以 image/ 开头，默认使用 jpg（兼容手机浏览器）
+  if (type.startsWith("image/")) return "jpg"
 
   return null
 }
