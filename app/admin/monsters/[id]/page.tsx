@@ -45,8 +45,6 @@ export default async function MonsterEditPage({
         <CardContent>
           <form
             action={updateMonsterAction}
-            method="post"
-            encType="multipart/form-data"
             className="grid gap-4"
           >
             <input type="hidden" name="id" value={monster.id} />

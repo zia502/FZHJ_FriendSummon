@@ -71,8 +71,6 @@ export default async function WeaponBoardEditPage({
         <CardContent>
           <form
             action={updateWeaponBoardAction}
-            method="post"
-            encType="multipart/form-data"
             className="grid gap-4"
           >
             <input type="hidden" name="id" value={board.id} />
@@ -257,7 +255,6 @@ export default async function WeaponBoardEditPage({
         <CardContent>
           <form
             action={deleteWeaponBoardAction}
-            method="post"
             className="grid gap-3"
           >
             <input type="hidden" name="id" value={board.id} />

@@ -269,8 +269,6 @@ export default async function AdminPage({
         <CardContent>
           <form
             action={addMonsterAction}
-            method="post"
-            encType="multipart/form-data"
             className="grid gap-4"
           >
             <div className="grid gap-2">
